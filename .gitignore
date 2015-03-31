@@ -3,6 +3,7 @@
 
 # Example code in package build process
 *-Ex.R
+temp.R
 
 # R data files from past sessions
 .Rdata
@@ -10,3 +11,12 @@
 # RStudio files
 .Rproj.user/
 .Rproj.user
+*.Rproj
+
+# directories
+Data_external/
+Figures/
+Objects/
+Project_Medip/
+Results_scripts/
+

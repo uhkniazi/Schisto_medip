@@ -15,3 +15,5 @@ for further analysis in a genome browser and an object file used for next script
 contains functions and classes used by the script.
 CFeatures - a class inherited from GRanges, and holds the feature information for the genome i.e. exon, intron etc. this
 information was extracted from the gff file from sanger Schistosoma_mansoni_v5.2.gff
+
+
