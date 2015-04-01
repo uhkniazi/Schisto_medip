@@ -11,7 +11,7 @@
 # filter size to use later on, set to 0 or 1
 # 0 means a peak should be present in at least 1 replicate
 # 1 means a peak should be present in at least 2 replicates
-iFilterSize = 2
+iFilterSize = 1
 
 # get the csv file with sample names and file paths 
 # this will be data output from dismiss
@@ -47,7 +47,7 @@ c = grey.colors(3)
 yl = ceiling((max(t)/1000))*1000
 barplot(t(t), beside=T, ylim=c(0, yl), col = c,
         xlab='samples', ylab='count', main='number of peaks in each sample')
-legend('topleft', legend = colnames(t), fill = c)
+legend('topright', legend = colnames(t), fill = c)
 
 # the average sizes of peaks should be around 300-500 as that is the resolution of medip-seq
 # sizes of peaks
