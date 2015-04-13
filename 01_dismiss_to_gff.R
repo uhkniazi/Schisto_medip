@@ -54,7 +54,7 @@ legend('topright', legend = colnames(t), fill = c)
 w = width(oGRLsamples)
 print(paste('average peak sizes'))
 print(sapply(w, summary))
-par(mfrow=c(3,3))
+par(mfrow=c(3,2))
 n = names(w)
 for (i in 1:length(w)) {
   t = paste('peak width distribution in', n[i])
@@ -77,35 +77,37 @@ for (i in 1:length(oGRLsamples)){
 }
 
 # how many strands overlap
-df = f_dfGetMatchingStrandsFromGRanges(oGRLsamples[[1]], oGRLsamples[[2]])
-t = table(s1=df$s.query, s2=df$s.subject)
+df = f_dfGetMatchingStrandsFromGRanges(oGRLsamples[['s2']], oGRLsamples[['s3']])
+t = table(s2=df$s.query, s3=df$s.subject)
 print(t)
-print(paste(sum(rowSums(t)), 'out of', length(oGRLsamples[[1]]) ))
+print(paste('total =', sum(rowSums(t))))#, 'out of', length(oGRLsamples[['s2']]) ))
+# 
+# df = f_dfGetMatchingStrandsFromGRanges(oGRLsamples[[3]], oGRLsamples[[2]])
+# t = table(s3=df$s.query, s2=df$s.subject)
+# print(t)
+# print(paste(sum(rowSums(t)), 'out of', length(oGRLsamples[[3]]) ))
 
-df = f_dfGetMatchingStrandsFromGRanges(oGRLsamples[[3]], oGRLsamples[[2]])
-t = table(s3=df$s.query, s2=df$s.subject)
+df = f_dfGetMatchingStrandsFromGRanges(oGRLsamples[['f2']], oGRLsamples[['f4']])
+t = table(f2=df$s.query, f4=df$s.subject)
 print(t)
-print(paste(sum(rowSums(t)), 'out of', length(oGRLsamples[[3]]) ))
+print(paste('total =', sum(rowSums(t))))
+#print(paste(sum(rowSums(t)), 'out of', length(oGRLsamples[['f2']]) ))
+# 
+# df = f_dfGetMatchingStrandsFromGRanges(oGRLsamples[['f4']], oGRLsamples[['f2']])
+# t = table(f4=df$s.query, f2=df$s.subject)
+# print(t)
+# print(paste(sum(rowSums(t)), 'out of', length(oGRLsamples[['f4']]) ))
 
-df = f_dfGetMatchingStrandsFromGRanges(oGRLsamples[['f3']], oGRLsamples[['f2']])
-t = table(f3=df$s.query, f2=df$s.subject)
-print(t)
-print(paste(sum(rowSums(t)), 'out of', length(oGRLsamples[['f3']]) ))
-
-df = f_dfGetMatchingStrandsFromGRanges(oGRLsamples[['f4']], oGRLsamples[['f2']])
-t = table(f4=df$s.query, f2=df$s.subject)
-print(t)
-print(paste(sum(rowSums(t)), 'out of', length(oGRLsamples[['f4']]) ))
-
-df = f_dfGetMatchingStrandsFromGRanges(oGRLsamples[['m1']], oGRLsamples[['m3']])
-t = table(m1=df$s.query, m3=df$s.subject)
-print(t)
-print(paste(sum(rowSums(t)), 'out of', length(oGRLsamples[['m1']]) ))
+# df = f_dfGetMatchingStrandsFromGRanges(oGRLsamples[['m1']], oGRLsamples[['m3']])
+# t = table(m1=df$s.query, m3=df$s.subject)
+# print(t)
+# print(paste(sum(rowSums(t)), 'out of', length(oGRLsamples[['m1']]) ))
 
 df = f_dfGetMatchingStrandsFromGRanges(oGRLsamples[['m2']], oGRLsamples[['m3']])
 t = table(m2=df$s.query, m3=df$s.subject)
 print(t)
-print(paste(sum(rowSums(t)), 'out of', length(oGRLsamples[['m2']]) ))
+print(paste('total =', sum(rowSums(t))))
+#print(paste(sum(rowSums(t)), 'out of', length(oGRLsamples[['m2']]) ))
 
 ## classify data into groups
 ## how many unique classes
@@ -127,9 +129,10 @@ for (i in 1:length(n)){
 
 # a peak should be TRUE in 1 or 2 replicates at least - set iFilterSize variable
 # adding the row values for replicates e.g. s1, s2 and s3 will give a count of 0 to 3
-s = mOverlap[,'s1'] + mOverlap[,'s2'] + mOverlap[,'s3']
-f = mOverlap[,'f2'] + mOverlap[,'f3'] + mOverlap[,'f4']
-m = mOverlap[,'m1'] + mOverlap[,'m2'] + mOverlap[,'m3']
+# however we have removed the worst sample so we are adding only 2 samples
+s = mOverlap[,'s2'] + mOverlap[,'s3']
+f = mOverlap[,'f2'] + mOverlap[,'f4']
+m = mOverlap[,'m2'] + mOverlap[,'m3']
 # convert to a boolean vector depending on cutoff point
 s = s > iFilterSize
 f = f > iFilterSize
@@ -176,7 +179,7 @@ for (i in 1:length(unique(cp))){
   groups[f] = i
 }
 #groups.lab = factor(groups, labels = c('sfm', 'sf', 'sm', 's', 'f', 'm', 'fm'))
-groups.lab = factor(groups, labels = c('none', 'sfm', 'sm', 'm', 'fm', 'f', 'sf', 's'))
+groups.lab = factor(groups, labels = c('none', 'sf', 's', 'm', 'sfm', 'f', 'sm', 'fm'))
 print('Group count'); print(table(groups))
 print('Group count with labels'); print(table(groups.lab))
 # final data frame
@@ -184,7 +187,7 @@ dfPeakGroups = data.frame(groups.lab, groups, mOverlap.2)
 
 oGRpooled = gr
 mcols(oGRpooled) = dfPeakGroups
-md = list(groups=mGroups, desc='groups created by 01_dismiss_to_gff.R using iFilter = 2', date=paste(date()))
+md = list(groups=mGroups, desc='groups created by 01_dismiss_to_gff.R using iFilter = 1', date=paste(date()))
 metadata(oGRpooled) = md
 n = make.names(paste('oGRpooled.medip.peaks', date(), '.rds'))
 dir.create('Objects', showWarnings = F)
