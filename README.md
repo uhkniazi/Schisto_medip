@@ -14,6 +14,15 @@ for further analysis in a genome browser and an object file used for next script
 # Schisto_medip_classes.R
 contains functions and classes used by the script.
 CFeatures - a class inherited from GRanges, and holds the feature information for the genome i.e. exon, intron etc. this
-information was extracted from the gff file from sanger Schistosoma_mansoni_v5.2.gff
+information was extracted from the gff file from sanger Schistosoma_mansoni_v5.2.gff. 
+NOTE: This has been changed a little and now using the long GFF version downloaded from ftp://ftp.sanger.ac.uk/pub/project/pathogens/Schistosoma/mansoni/genome/GFF/Smansoni_gff_21032012.tar.gz
+
+# create_features_from_gff.R
+Using the gff file from ftp://ftp.sanger.ac.uk/pub/project/pathogens/Schistosoma/mansoni/genome/GFF/Smansoni_gff_21032012.tar.gz the
+features i.e. Gene and CDS (exon) are extracted. The script is only using the full chromosomes (at the moment) and reads each
+gff file for the corresponding chromosome as a tab separated file, extracts only the type attribute Gene or CDS. We proceed by
+extracting the parent ID for each exon (which is something like ID=Smp_160500.1). Create a GRanges object of the exons and split
+this into a GRangesList using the factor parent ID. [NOTE: proceed from here next time]
+
 
 
