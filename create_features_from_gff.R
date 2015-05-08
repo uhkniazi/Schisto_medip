@@ -19,6 +19,9 @@ for (i in 1:length(csFile.names)){
   dfGff = rbind(dfGff, gff[f,])  
 }
 gc()
+# remove non standard smp names
+i = grepl('^ID=Smp_\\d+\\.?\\d*[:\\w]*;.+', dfGff$V9, perl=T)
+dfGff = dfGff[i,]
 # extract the ids for the genes and exons i.e. Smps
 csID = as.character(gsub('^ID=(Smp_\\d+\\.?\\d*[:\\w]*);.+', '\\1',dfGff$V9, perl=T))
 dfGff$csID = csID
@@ -31,15 +34,68 @@ oGRexon = GRanges(as.character(dfGff.exon$V1), IRanges(dfGff.exon$V4, dfGff.exon
 oGRexon$Parent = fExons 
 # split it into GRangestList 
 oGRLexon = split(oGRexon, fExons)
+# remove genes with only one exon, large number of exons
+# large total width of exons
+w = sum(width(oGRLexon))
 
+# model the cutoff
+X = log(w)
+r = range(X)
+r[1] = floor(r[1]); r[2] = ceiling(r[2])
+s = seq(r[1]-0.5, r[2]+0.5, 1)
+hist(X, prob=T, main='Width of Genes', breaks=s, xlab='log Width', ylab='', ylim=c(0.0, 0.5))
+s = seq(r[1], r[2], length.out = 100)
+dn = dnorm(s, mean(X), sd(X))
+lines(s, dn, type='l')
+# choose the cutoff
+c = qnorm(0.01, mean = mean(X), sd(X), lower.tail = F)
+points(c, 0.0, col='red')
+cutoff = which(X > c)
 
+# remove these genes
+temp = as.list(oGRLexon)
+temp[names(cutoff)] = NULL
+oGRLexon = GRangesList(temp)
 
-gff.file = file.choose()
-oGR.gff = import(gff.file)
+# which genes have only one exon
+X = elementLengths(oGRLexon)
+cutoff = which(X == 1)
+temp = as.list(oGRLexon)
+temp[names(cutoff)] = NULL
+oGRLexon = GRangesList(temp)
 
+# create the gene body
+oGRLgene = range(oGRLexon)
+# create the introns by using setdiff, however the first intron and 1st exon may not be in the
+# same order, so confirm that if we need to use this at some point
+oGRLintron = vector('list', length=length(oGRLgene))
+for (i in 1:length(oGRLintron)){
+  oGRLintron[[i]] = setdiff(oGRLgene[[i]], oGRLexon[[i]])
+}
+names(oGRLintron) = names(oGRLgene)
+oGRLintron = GRangesList(oGRLintron)
 
-## get the genes out first
-dfMcols = mcols(oGR.gff)
+# create the first exon
+temp = sapply(oGRLexon, function(x) x[1])
+oGRLexon.1st = GRangesList(temp)
+# remove first exon from other exons
+temp = sapply(oGRLexon, function(x) x[-1])
+oGRLexon.others = GRangesList(temp)
 
-f = oGR.gff$type == 'gene'
-oGR
+# create the upstream and downstream 2k regions
+oGRLupstream = flank(oGRLgene, width = 2000, start = T)
+oGRLdownstream = flank(oGRLgene, width = 2000, start = F)
+
+d = paste(date(), 'gene casette created from gff file')
+
+lFeatures = list(gene=oGRLgene, fst.exon = oGRLexon.1st,
+                 exons.others=oGRLexon.others,
+                 exons.all=oGRLexon,
+                 introns=oGRLintron,
+                 upstream=oGRLupstream,
+                 downstream=oGRLdownstream,
+                 desc=d)
+
+n = paste('Objects/lGeneCasette', make.names(date()), sep='')
+dir.create('Objects', showWarnings = F)
+save(lFeatures, file=n)

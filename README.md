@@ -22,7 +22,7 @@ Using the gff file from ftp://ftp.sanger.ac.uk/pub/project/pathogens/Schistosoma
 features i.e. Gene and CDS (exon) are extracted. The script is only using the full chromosomes (at the moment) and reads each
 gff file for the corresponding chromosome as a tab separated file, extracts only the type attribute Gene or CDS. We proceed by
 extracting the parent ID for each exon (which is something like ID=Smp_160500.1). Create a GRanges object of the exons and split
-this into a GRangesList using the factor parent ID. [NOTE: proceed from here next time]
+this into a GRangesList using the factor parent ID. [details need to be added here]
 
 
 
