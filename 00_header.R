@@ -16,3 +16,8 @@ pBam = "Data_external/Bam_files"
 pPeaks = 'Data_external/Dismiss_output'
 pWD = getwd()
 
+##### global variables
+gcvChromosomes = c('Schisto_mansoni.Chr_ZW', 'Schisto_mansoni.Chr_1', 'Schisto_mansoni.Chr_2', 
+                   'Schisto_mansoni.Chr_4', 'Schisto_mansoni.Chr_3', 'Schisto_mansoni.Chr_6', 
+                   'Schisto_mansoni.Chr_7', 'Schisto_mansoni.Chr_5')
+
