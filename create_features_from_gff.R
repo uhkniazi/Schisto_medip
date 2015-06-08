@@ -25,6 +25,9 @@ dfGff = dfGff[i,]
 # extract the ids for the genes and exons i.e. Smps
 csID = as.character(gsub('^ID=(Smp_\\d+\\.?\\d*[:\\w]*);.+', '\\1',dfGff$V9, perl=T))
 dfGff$csID = csID
+# used later in the script
+dfGff.bkup = dfGff
+
 # each exon/CDS is assigned a parent gene id, so use that and make GRanges from the exons
 dfGff.exon = dfGff[dfGff$V3 == 'CDS',]
 # use this factor to split the GRanges object into a GRanges list based on the parent ID
@@ -97,5 +100,74 @@ lFeatures = list(gene=oGRLgene, fst.exon = oGRLexon.1st,
                  desc=d)
 
 n = paste('Objects/lGeneCasette', make.names(date()), sep='')
+dir.create('Objects', showWarnings = F)
+save(lFeatures, file=n)
+
+
+######################################################################
+###### create features object i.e. bins of features to get overlaps
+
+# use variable created earlier
+dfGff = dfGff.bkup
+# each exon/CDS is assigned a parent gene id, so use that and make GRanges from the exons
+dfGff.exon = dfGff[dfGff$V3 == 'CDS',]
+# use this factor to split the GRanges object into a GRanges list based on the parent ID
+fExons = gsub('(Smp_\\d+\\.?\\d*)[:\\w]*', '\\1', dfGff.exon$csID, perl=T)
+# create GRanges object for exons
+oGRexon = GRanges(as.character(dfGff.exon$V1), IRanges(dfGff.exon$V4, dfGff.exon$V5), strand = as.character(dfGff.exon$V7))
+oGRexon$Parent = fExons 
+# split it into GRangestList 
+oGRLexon = split(oGRexon, fExons)
+
+# create genes from exons granges list
+oGRLgene = range(oGRLexon)
+oGRgene = unlist(oGRLgene)
+
+## create features
+### gene scaffold for overlaps
+oGRgene = reduce(oGRgene)
+oGRexon = reduce(oGRexon)
+oGRintron = setdiff(oGRgene, oGRexon)
+oGRintron = reduce(oGRintron)
+oGRprom = flank(oGRgene, width = 2000, start = T)
+oGRds = flank(oGRgene, width = 2000, start = F)
+# any promoters or downstream regoins at ends of chromosomes
+f = width(oGRprom) < 2000
+oGRprom = oGRprom[!f]
+f = width(oGRds) < 2000
+oGRds = oGRds[!f]
+
+# remove promoters that run into a previous gene
+f = overlapsAny(oGRprom, oGRgene)
+oGRprom = oGRprom[!f]
+# remove downstream regions running into the next gene
+f = overlapsAny(oGRds, oGRgene)
+oGRds = oGRds[!f]
+
+# Create repeats file
+gff = file.choose()
+# load repeats file
+gr.rep = import(gff)
+# as the chromosome W is named W here and ZW in other places, rename W here to ZW
+# simpler to create a new ranges object
+mc = mcols(gr.rep)
+sn = as.character(seqnames(gr.rep))
+f = grepl('^Schisto_mansoni.Chr_W$', sn, perl=T)
+sn[f] = 'Schisto_mansoni.Chr_ZW'
+# create a new object
+oGRrepeats = GRanges(sn, ranges(gr.rep), strand = strand(gr.rep))
+mcols(oGRrepeats) = mc
+oGRrepeats = oGRrepeats[seqnames(oGRrepeats) %in% gcvChromosomes]
+oGRrepeats = reduce(oGRrepeats)
+d = paste('compressed features i.e. binned, for schisto v5.2 created on', date())
+## create features object to be used later
+lFeatures = list(gene=oGRgene, exon=oGRexon,
+                 intron=oGRintron,
+                 prom=oGRprom,
+                 downstream=oGRds,
+                 repeats=oGRrepeats,
+                 desc=d)
+
+n = paste('Objects/lFeatures.', make.names(date()), sep='')
 dir.create('Objects', showWarnings = F)
 save(lFeatures, file=n)

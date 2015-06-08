@@ -23,7 +23,11 @@ features i.e. Gene and CDS (exon) are extracted. The script is only using the fu
 large number of exons (based on the distribution of number of exons in each gene) and correspondingly very long base pair region
 covered by these exons. We also remove genes with only one exon, as they do not fit a casette pattern. We create the introns by
 using setdiff function, create a first exon, other exons, 2k upstream and 2k downstream regions - all in the form of GRangesList
-objects. The data is saved as a list of features for use by other scripts.
+objects. The data is saved as a list of features for use by other scripts.  
+  
+The second part of the script uses the gff imported earlier, to create reduced exons, genes, introns, 2k upstream, 2k downstream and
+the repeats file RepBasePerpignanSma52.gff. We only use the data from the full chromosomes, and the data is saved as a lFeatures 
+object to be used by later scripts.
 
 # 02_features_overlaps_casette.R
 The script uses a casette feature object created earlier (create_features_from_gff.R), Pooled Medip Peaks object created earlier 
