@@ -48,5 +48,10 @@ analysis and the small scaffolds. Using the features casette created earlier (cr
 if a feature in each casette gene overlaps with a medip and bs-seq data. The data is reported as a bar plot with the null hypothesis
 of equal proportions tested using a proprtion test.
 
+# 03_medip_overlap_genome.R
+The script starts with loading the pooled medip peaks object created earlier using 01_dismiss_to_gff.R, and the features list created
+earlier using the second half of the script create_features_from_gff.R. The overlaps of features (query) vs methylation data (subject) is done and the conditional probability i.e. P(y | Theta) - where y is data and Theta is the parameter - is calculated as a 
+multinomial distribution. The confidence intervals are calculated by simulation. We summarize the data as bar plots with error bars for 95% confidence interval. The medip data is also split into groups (7 groups) and distributions calculated for each one 
+separately as well.
 
 
