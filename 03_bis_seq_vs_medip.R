@@ -17,156 +17,311 @@ oGRpooled = f_LoadObject(file.choose())
 # keep only the medip peaks from class 'm' i.e. adult male
 f = which(oGRpooled$groups.lab %in% c('m', 'sfm', 'sm', 'fm'))
 oGRpooled = oGRpooled[f]
+# 
+# oGR.bis = read.csv(file.choose(), header=F, sep='\t')
+# oGR.bis = oGR.bis[-1,]
+# oGR.bis = GRanges(oGR.bis$V1, IRanges(oGR.bis$V2, oGR.bis$V3), mcols=DataFrame(proportion=oGR.bis$V4))
 
-## choose the correct bismark methyl extractor files
-# read the Original Top (OT) file first
-f = file.choose()
-f2 = file.choose()
-oGR.chh.ot = f_oGRReadBismarkMethylExtractor(file = f, '+')
-oGR.chh.ob = f_oGRReadBismarkMethylExtractor(file = f2, '-')
-f = file.choose()
-f2 = file.choose()
-oGR.chg.ot = f_oGRReadBismarkMethylExtractor(file = f, '+')
-oGR.chg.ob = f_oGRReadBismarkMethylExtractor(file = f2, '-')
-f = file.choose()
-f2 = file.choose()
-oGR.cg.ot = f_oGRReadBismarkMethylExtractor(file = f, '+')
-oGR.cg.ob = f_oGRReadBismarkMethylExtractor(file = f2, '-')
-# this may give a warning which we can ignore
-oGR.bis = c(oGR.cg.ob, oGR.cg.ot, oGR.chg.ob, oGR.chg.ot, oGR.chh.ob, oGR.chh.ot)
-oGR.bis = sort(oGR.bis)
+## load from here for next use or load the stranded object
+oGR.bis = f_LoadObject(file.choose())
 
-# save object and load from here in future
-save(oGR.bis, file='Objects/oGR.bis')
+##############################################
+### this section not needed if we load stranded object 
+# # keep only the chromosomes of interest
+# f = seqnames(oGRpooled) %in% gcvChromosomes[1]
+# oGRpooled = oGRpooled[!f]
+# 
+# oGR.bis = oGR.bis[seqnames(oGR.bis) %in% gcvChromosomes]
+# 
+# ## assign strands to the base positions
+# ## use the biostrings object for genome version 5.2 created earlier
+# library(Biostrings)
+# seq = f_LoadObject(file.choose())
+# base = f_DNAStringSet_GRangesSequenceFromDNAStringSet(seq, oGR.bis)
+# f = base == 'C'
+# st = rep(NA, length(f))
+# st[f] = '+'
+# st[!f] = '-'
+# strand(oGR.bis) = st
+###############################################
 
-## if we want to remove low count potentially noisy data
-## model the distribution of the data to see how many times
-## a particular C is methylated and if it appears to follow a poisson
-## or negative binomial distribution, then use that to remove noisy bits
-# choose a cutoff by modelling the distribution shape
-w = countOverlaps(unique(oGR.bis), oGR.bis)
-w2 = log(w)
-r = range(w2)
-s = seq(floor(r[1])-0.5, ceiling(r[2])+0.5, by = 1)
-r[1] = floor(r[1])
-r[2] = ceiling(r[2])
-hist(w2, prob=T, breaks=s, main='distribution of 5mCs over nucleotide positions', 
-     xlab='log of counts', ylab='')
-r = round(r)
-dp = dpois(r[1]:r[2], lambda = median(w2))
-dn = dnbinom(r[1]:r[2], size = median(w2), mu = median(w2))
-lines(r[1]:r[2], dp, col='red', type='b')
-lines(r[1]:r[2], dn, col='blue', type='b')
-legend('topright', legend = c('poi', 'nbin'), fill = c('red', 'blue'))
-c = qpois(0.05, median(w2), lower.tail = F)
-points(c, 0, pch=20, col='red')
-## we decide to use a poisson distribution
-oGR.cg.ob = f_oGRRemovePoissonNoiseFromBismark(oGR.cg.ob)
-oGR.cg.ot = f_oGRRemovePoissonNoiseFromBismark(oGR.cg.ot)
-oGR.chg.ob = f_oGRRemovePoissonNoiseFromBismark(oGR.chg.ob)
-oGR.chg.ot = f_oGRRemovePoissonNoiseFromBismark(oGR.chg.ot)
-oGR.chh.ob = f_oGRRemovePoissonNoiseFromBismark(oGR.chh.ob)
-oGR.chh.ot = f_oGRRemovePoissonNoiseFromBismark(oGR.chh.ot)
-oGR.bis = c(oGR.cg.ob, oGR.cg.ot, oGR.chg.ob, oGR.chg.ot, oGR.chh.ob, oGR.chh.ot)
-oGR.bis = sort(oGR.bis)
+# ## choose the correct bismark methyl extractor files
+# # read the Original Top (OT) file first
+# f = file.choose()
+# f2 = file.choose()
+# oGR.chh.ot = f_oGRReadBismarkMethylExtractor(file = f, '+')
+# oGR.chh.ob = f_oGRReadBismarkMethylExtractor(file = f2, '-')
+# f = file.choose()
+# f2 = file.choose()
+# oGR.chg.ot = f_oGRReadBismarkMethylExtractor(file = f, '+')
+# oGR.chg.ob = f_oGRReadBismarkMethylExtractor(file = f2, '-')
+# f = file.choose()
+# f2 = file.choose()
+# oGR.cg.ot = f_oGRReadBismarkMethylExtractor(file = f, '+')
+# oGR.cg.ob = f_oGRReadBismarkMethylExtractor(file = f2, '-')
+# # this may give a warning which we can ignore
+# oGR.bis = c(oGR.cg.ob, oGR.cg.ot, oGR.chg.ob, oGR.chg.ot, oGR.chh.ob, oGR.chh.ot)
+# oGR.bis = sort(oGR.bis)
+# 
+# # save object and load from here in future
+# save(oGR.bis, file='Objects/oGR.bis')
+
+########## remove Cs with 0 proportions
+f = which(oGR.bis$mcols.proportion == 0)
+oGR.bis = oGR.bis[-f]
 gc()
+# break the data into parts/groups based on quantiles
+cut.pts = quantile(oGR.bis$mcols.proportion, probs = 0:10/10)
+groups = cut(oGR.bis$mcols.proportion, breaks = cut.pts, include.lowest = T, labels = 1:10)
+boxplot(oGR.bis$mcols.proportion ~ groups, las=2)
+oGR.bis$groups = groups
 
+# 
+# ## if we want to remove low count potentially noisy data
+# ## model the distribution of the data to see how many times
+# ## a particular C is methylated and if it appears to follow a poisson
+# ## or negative binomial distribution, then use that to remove noisy bits
+# # choose a cutoff by modelling the distribution shape
+# w = countOverlaps(unique(oGR.bis), oGR.bis)
+# w2 = log(w)
+# r = range(w2)
+# s = seq(floor(r[1])-0.05, ceiling(r[2])+0.05, by = .1)
+# r[1] = floor(r[1])
+# r[2] = ceiling(r[2])
+# hist(w2, prob=T, breaks=s, main='distribution of 5mCs over nucleotide positions', 
+#      xlab='log of counts', ylab='')
+# r = round(r)
+# dp = dpois(r[1]:r[2], lambda = median(w2))
+# dn = dnbinom(r[1]:r[2], size = median(w2), mu = median(w2))
+# lines(r[1]:r[2], dp, col='red', type='b')
+# lines(r[1]:r[2], dn, col='blue', type='b')
+# legend('topright', legend = c('poi', 'nbin'), fill = c('red', 'blue'))
+# c = qpois(0.05, median(w2), lower.tail = F)
+# points(c, 0, pch=20, col='red')
+# ## we decide to use a poisson distribution
+# oGR.cg.ob = f_oGRRemovePoissonNoiseFromBismark(oGR.cg.ob)
+# oGR.cg.ot = f_oGRRemovePoissonNoiseFromBismark(oGR.cg.ot)
+# oGR.chg.ob = f_oGRRemovePoissonNoiseFromBismark(oGR.chg.ob)
+# oGR.chg.ot = f_oGRRemovePoissonNoiseFromBismark(oGR.chg.ot)
+# oGR.chh.ob = f_oGRRemovePoissonNoiseFromBismark(oGR.chh.ob)
+# oGR.chh.ot = f_oGRRemovePoissonNoiseFromBismark(oGR.chh.ot)
+# oGR.bis = c(oGR.cg.ob, oGR.cg.ot, oGR.chg.ob, oGR.chg.ot, oGR.chh.ob, oGR.chh.ot)
+# oGR.bis = sort(oGR.bis)
+# gc()
 
-# remove chromosome ZW from the analysis due to conflicting assembly versions
-f = seqnames(oGRpooled) %in% gcvChromosomes[1]
-oGRpooled = oGRpooled[!f]
+# 
+# # remove chromosome ZW from the analysis due to conflicting assembly versions
+# f = seqnames(oGRpooled) %in% gcvChromosomes[1]
+# oGRpooled = oGRpooled[!f]
+# 
+# oGR.bis = oGR.bis[seqnames(oGR.bis) %in% gcvChromosomes]
 
-oGR.bis = oGR.bis[seqnames(oGR.bis) %in% gcvChromosomes]
-
-### load the gene casette
-p = paste('Choose features casette created earlier with create_features_from_gff.R')
+############## load the features object for overlaps
+p = paste('Choose features object created earlier with create_features_from_gff.R')
 print(p)
 lFeatures = f_LoadObject(file.choose())
 
-######################################################
-### Analysis
+## count over features granges 
+lFeatures$gene = NULL
+lFeatures$desc = NULL
+
+############# look at overlaps of medip and bs-seq
 ### how many overlaps between bs-seq data and medip peaks in males
 dfOverlaps = data.frame(table(overlapsAny(oGRpooled, oGR.bis)))
 dfOverlaps.nostrand = data.frame(table(overlapsAny(oGRpooled, oGR.bis, ignore.strand=T)))
 
-### Gene Casette overlaps
-## count for medip data
-# create a matrix to hold the matches
-mFeatures = matrix(NA, nrow = length(lFeatures$fst.exon), ncol = 5)
-colnames(mFeatures) = c('upstream', 'fst.exon', 'exons.others', 'introns', 'downstream')
-rownames(mFeatures) = names(lFeatures$fst.exon)
-cn = colnames(mFeatures)
-rn = rownames(mFeatures)
-# fill the data
-for(i in 1:ncol(mFeatures)){
-  # fill data one column at a time
-  mFeatures[,i] = overlapsAny(lFeatures[[cn[i]]][rn], oGRpooled, ignore.strand=F)
+### check overlaps based on groups
+c = rep(NA, length=10)
+for (i in 10:1){
+  c[i] = sum(overlapsAny(oGRpooled, oGR.bis[as.numeric(oGR.bis$groups)  >= i]))
 }
-f = rowSums(mFeatures)
-# number of genes with a signal
-table(f > 0)
-mFeatures.medip = mFeatures
-# summarize the data
-mBar = colSums(mFeatures)
-print(mBar)
-mBar.medip = mBar
+plot(c, type='b', main='MeDIP Overlap with BS-Seq', xlab='Groups', ylab='Overlaps', sub='As we move along the groups')
 
-## count for bs-seq data
-mFeatures = matrix(NA, nrow = length(lFeatures$fst.exon), ncol = 5)
-colnames(mFeatures) = c('upstream', 'fst.exon', 'exons.others', 'introns', 'downstream')
-rownames(mFeatures) = names(lFeatures$fst.exon)
-cn = colnames(mFeatures)
-rn = rownames(mFeatures)
-# fill the data
-for(i in 1:ncol(mFeatures)){
-  # fill data one column at a time
-  mFeatures[,i] = overlapsAny(lFeatures[[cn[i]]][rn], unique(oGR.bis), ignore.strand=F)
-}
-f = rowSums(mFeatures)
-# number of genes with a signal
-table(f > 0)
-mFeatures.bis = mFeatures
-# summarize the data
-mBar = colSums(mFeatures)
-print(mBar)
-mBar.bs = mBar
+## plot the distribution over the features for MeDIP
+lOverlaps = sapply(lFeatures, function(x) overlapsAny(x, oGRpooled))
+mDat = sapply(lOverlaps, table)
+rownames(mDat) = c('False', 'True')
+# calculate confidence intervals/errors by simulating the data
+ivProb.medip.all = mDat['True',] / rowSums(mDat)['True']
+# simulate data as a sample from a multinomial distribution
+# P(y | Theta)
+mDat.medip.all = mDat['True',]
+mSim.medip.all = t(rmultinom(n = 1000, size = 1000, prob = ivProb.medip.all))
+# convert to probability scale for plotting
+mSim.medip.all = mSim.medip.all / rowSums(mSim.medip.all)
 
-mBar = rbind(mBar.medip, mBar.bs)
-mBar.p = mBar / rowSums(mBar)
+## plot for BS-Seq
+lOverlaps = sapply(lFeatures, function(x) overlapsAny(x, oGR.bis))
+mDat = sapply(lOverlaps, table)
+rownames(mDat) = c('False', 'True')
+# calculate confidence intervals/errors by simulating the data
+ivProb.bis.all = mDat['True',] / rowSums(mDat)['True']
+# simulate data as a sample from a multinomial distribution
+# P(y | Theta)
+mDat.bis.all = mDat['True',]
+mSim.bis.all = t(rmultinom(n = 1000, size = 1000, prob = ivProb.bis.all))
+# convert to probability scale for plotting
+mSim.bis.all = mSim.bis.all / rowSums(mSim.bis.all)
+
+### plot the 2 data together
 c = rainbow(2)
-bar = barplot(mBar.p, beside=T, col=c, main='Distribution over the Gene Casette for BS-Seq and MeDIP Data',
-        ylim=c(0,0.8))
-legend('topright', legend = c('MeDIP', 'BS-Seq'), fill=c)
+mBar = rbind(ivProb.medip.all, ivProb.bis.all)
+rownames(mBar) = c('MeDIP', 'BS-Seq')
+l2 = barplot(mBar, beside=T, ylim=c(0, 0.8), col=c, main='All MeDIP and BS-Seq data')
+legend('topleft', legend = rownames(mBar), fill = c)
+l = l2[1,]
+## make error bars
+m = apply(mSim.medip.all, 2, function(x) quantile(x, c(0.025, 0.975)))
+segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
+segments(l-0.1, y0 = m[1,], l+0.1, y1 = m[1,], lwd=2)
+segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
 
-## perform proportion tests on the data by modelling the distribution as binomial 
-## where n = number of genes
-## for each feature e.g. upstream
-## success is number of TRUE and failures is FALSE
-## Compare the proprtions of successes in the 2 cases i.e. medip vs bs
-p.val = rep(NA, length.out = ncol(mFeatures.bis))
-names(p.val) = colnames(mFeatures.bis)
+l = l2[2,]
+## make error bars
+m = apply(mSim.bis.all, 2, function(x) quantile(x, c(0.025, 0.975)))
+segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
+segments(l-0.1, y0 = m[1,], l+0.1, y1 = m[1,], lwd=2)
+segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
 
-for (i in 1:length(p.val)){
-  n = names(p.val)[i]
-  # calculate success for med and bis
-  trials = nrow(mFeatures.bis)
-  success.med = sum(mFeatures.medip[,n])
-  success.bis = sum(mFeatures.bis[,n])
-  p.val[i] = prop.test(c(success.med, success.bis), n = c(trials,trials))$p.value
-}
+##################################################################################
+## plots for comparing subgroups
+lOverlaps = sapply(lFeatures, function(x) overlapsAny(x, oGRpooled))
+mDat = sapply(lOverlaps, table)
+rownames(mDat) = c('False', 'True')
+# calculate confidence intervals/errors by simulating the data
+ivProb.medip.all = mDat['True',] / rowSums(mDat)['True']
+# simulate data as a sample from a multinomial distribution
+# P(y | Theta)
+mDat.medip.all = mDat['True',]
+mSim.medip.all = t(rmultinom(n = 1000, size = 1000, prob = ivProb.medip.all))
+# convert to probability scale for plotting
+mSim.medip.all = mSim.medip.all / rowSums(mSim.medip.all)
 
-i = which(p.val < 0.01)
-# draw stars on significant values
-pos = colMeans(bar)[i]
-points(pos, rep(0.72, times=length(pos)), pch='*', cex=2)
+## plot for BS-Seq
+lOverlaps = sapply(lFeatures, function(x) overlapsAny(x, oGR.bis[as.numeric(oGR.bis$groups) >= 10]))
+mDat = sapply(lOverlaps, table)
+rownames(mDat) = c('False', 'True')
+# calculate confidence intervals/errors by simulating the data
+ivProb.bis.all = mDat['True',] / rowSums(mDat)['True']
+# simulate data as a sample from a multinomial distribution
+# P(y | Theta)
+mDat.bis.all = mDat['True',]
+mSim.bis.all = t(rmultinom(n = 1000, size = 1000, prob = ivProb.bis.all))
+# convert to probability scale for plotting
+mSim.bis.all = mSim.bis.all / rowSums(mSim.bis.all)
+
+### plot the 2 data together
+c = rainbow(2)
+mBar = rbind(ivProb.medip.all, ivProb.bis.all)
+rownames(mBar) = c('MeDIP', 'BS-Seq')
+l2 = barplot(mBar, beside=T, ylim=c(0, 0.8), col=c, main='All MeDIP and BS-Seq data Group 10')
+legend('topleft', legend = rownames(mBar), fill = c)
+l = l2[1,]
+## make error bars
+m = apply(mSim.medip.all, 2, function(x) quantile(x, c(0.025, 0.975)))
+segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
+segments(l-0.1, y0 = m[1,], l+0.1, y1 = m[1,], lwd=2)
+segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
+
+l = l2[2,]
+## make error bars
+m = apply(mSim.bis.all, 2, function(x) quantile(x, c(0.025, 0.975)))
+segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
+segments(l-0.1, y0 = m[1,], l+0.1, y1 = m[1,], lwd=2)
+segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
+##################################################################################
 
 # 
 # 
+# ### load the gene casette
+# p = paste('Choose features casette created earlier with create_features_from_gff.R')
+# print(p)
+# lFeatures = f_LoadObject(file.choose())
 # 
+# ######################################################
+# ### Analysis
+# ### how many overlaps between bs-seq data and medip peaks in males
+# dfOverlaps = data.frame(table(overlapsAny(oGRpooled, oGR.bis)))
+# dfOverlaps.nostrand = data.frame(table(overlapsAny(oGRpooled, oGR.bis, ignore.strand=T)))
 # 
+# ### Gene Casette overlaps
+# ## count for medip data
+# # create a matrix to hold the matches
+# mFeatures = matrix(NA, nrow = length(lFeatures$fst.exon), ncol = 5)
+# colnames(mFeatures) = c('upstream', 'fst.exon', 'exons.others', 'introns', 'downstream')
+# rownames(mFeatures) = names(lFeatures$fst.exon)
+# cn = colnames(mFeatures)
+# rn = rownames(mFeatures)
+# # fill the data
+# for(i in 1:ncol(mFeatures)){
+#   # fill data one column at a time
+#   mFeatures[,i] = overlapsAny(lFeatures[[cn[i]]][rn], oGRpooled, ignore.strand=F)
+# }
+# f = rowSums(mFeatures)
+# # number of genes with a signal
+# table(f > 0)
+# mFeatures.medip = mFeatures
+# # summarize the data
+# mBar = colSums(mFeatures)
+# print(mBar)
+# mBar.medip = mBar
 # 
+# ## count for bs-seq data
+# mFeatures = matrix(NA, nrow = length(lFeatures$fst.exon), ncol = 5)
+# colnames(mFeatures) = c('upstream', 'fst.exon', 'exons.others', 'introns', 'downstream')
+# rownames(mFeatures) = names(lFeatures$fst.exon)
+# cn = colnames(mFeatures)
+# rn = rownames(mFeatures)
+# # fill the data
+# for(i in 1:ncol(mFeatures)){
+#   # fill data one column at a time
+#   mFeatures[,i] = overlapsAny(lFeatures[[cn[i]]][rn], unique(oGR.bis), ignore.strand=F)
+# }
+# f = rowSums(mFeatures)
+# # number of genes with a signal
+# table(f > 0)
+# mFeatures.bis = mFeatures
+# # summarize the data
+# mBar = colSums(mFeatures)
+# print(mBar)
+# mBar.bs = mBar
 # 
+# mBar = rbind(mBar.medip, mBar.bs)
+# mBar.p = mBar / rowSums(mBar)
+# c = rainbow(2)
+# bar = barplot(mBar.p, beside=T, col=c, main='Distribution over the Gene Casette for BS-Seq and MeDIP Data',
+#         ylim=c(0,0.8))
+# legend('topright', legend = c('MeDIP', 'BS-Seq'), fill=c)
 # 
-# ## prop.test(c(170, 233), c(403,403))
-# chisq.test(mBar[1,], p = mBar.p[2,], simulate.p.value = T)
+# ## perform proportion tests on the data by modelling the distribution as binomial 
+# ## where n = number of genes
+# ## for each feature e.g. upstream
+# ## success is number of TRUE and failures is FALSE
+# ## Compare the proprtions of successes in the 2 cases i.e. medip vs bs
+# p.val = rep(NA, length.out = ncol(mFeatures.bis))
+# names(p.val) = colnames(mFeatures.bis)
+# 
+# for (i in 1:length(p.val)){
+#   n = names(p.val)[i]
+#   # calculate success for med and bis
+#   trials = nrow(mFeatures.bis)
+#   success.med = sum(mFeatures.medip[,n])
+#   success.bis = sum(mFeatures.bis[,n])
+#   p.val[i] = prop.test(c(success.med, success.bis), n = c(trials,trials))$p.value
+# }
+# 
+# i = which(p.val < 0.01)
+# # draw stars on significant values
+# pos = colMeans(bar)[i]
+# points(pos, rep(0.72, times=length(pos)), pch='*', cex=2)
+# 
+# # 
+# # 
+# # 
+# # 
+# # 
+# # 
+# # 
+# # ## prop.test(c(170, 233), c(403,403))
+# # chisq.test(mBar[1,], p = mBar.p[2,], simulate.p.value = T)
 

@@ -35,7 +35,9 @@ The script uses a casette feature object created earlier (create_features_from_g
 feature from the casette, the rows representing each gene from that feature, and count how many times they overlap the medip GRanges
 object. The summary is reported in a bar plot and a csv file.
 
-# 03_bis_seq_vs_medip.R
+# 03_bis_seq_vs_medip.R  
+NOTE: Changes made to this SCRIPT - Still in progress and will be documented when finished  
+
 Uses the data from BS-seq experiment published by frank lyko, and compares it to the medip data. The pooled medip peaks created 
 earlier (01_dismiss_to_gff.R), Methyl extractor tab separated files created by bismark are used to import bs-seq data with a custom
 function f_oGRReadBismarkMethylExtractor. The methylated 5mCs from Original top (OT) and original bottom (OB) sides and methylation
