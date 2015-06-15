@@ -37,18 +37,20 @@ object. The summary is reported in a bar plot and a csv file.
 
 # 03_bis_seq_vs_medip.R  
 NOTE: Changes made to this SCRIPT - Still in progress and will be documented when finished  
-
-Uses the data from BS-seq experiment published by frank lyko, and compares it to the medip data. The pooled medip peaks created 
-earlier (01_dismiss_to_gff.R), Methyl extractor tab separated files created by bismark are used to import bs-seq data with a custom
-function f_oGRReadBismarkMethylExtractor. The methylated 5mCs from Original top (OT) and original bottom (OB) sides and methylation
-context i.e. CHH, CHG and CpG are imported and combined into a single object. The low count 5mCs are removed by modelling the count
-distribution of particular 5mCs as a negative binomial and poisson distributions on a log scale, and an appropriate cutoff chosen. 
-Basically low counting 5mCs are removed - if we have the data with the proprtions for each 5mC (ie. observed as methylated vs not 
-observed) then we can model it as a binomial distribution and choose the 5mCs with high proprtions. The custom function 
-f_oGRRemovePoissonNoiseFromBismark removes the low count 5mCs. Due to genome annotation issues, we remove chromosome ZW from the
-analysis and the small scaffolds. Using the features casette created earlier (create_features_from_gff.R), the script calculates 
-if a feature in each casette gene overlaps with a medip and bs-seq data. The data is reported as a bar plot with the null hypothesis
-of equal proportions tested using a proprtion test.
+Data published by frank lyko downloaded as bed format. It was imported as a csv file and converted to a GRanges object. The Sequence
+version 5.2 was imported as a Biostrings object (DNAStringSet) and the sequence of each Bs-Seq GRanges object extracted using the
+custom function f_DNAStringSet_GRangesSequenceFromDNAStringSet. Those residues that were C were marked as + stranded ranges while 
+those as G were - stranded ranges. The object was saved as GRanges object and imported directly for future use. The MeDIP data was 
+imported (created earlier using 01_dismiss_to_gff.R) and peaks that should occur in the male are included in the analysis. The BS-Seq
+data is broken down into quantiles of proportions (how many times it was seen / total number of times it was seen). The features 
+object created earlier is used (create_features_from_gff.R) for calculating feature overlaps. The main plots of interest are 
+proportion of MeDIP peak and BS-Seq 5mC distribution over the features, modelled as a multinomial distribution, and confidence 
+intervals calculated by resampling from a multinomial distribution.  
+  
+The second part of the script extends the sizes of the BS-Seq ranges to 2, and loads the dinucleotide sequence from the Biostrings
+object created earlier. The sequences from the - (minus) strand are reverse complimented and the dinucleotide frequencies are
+calculated for the BS-Seq data. Similarly the frequencies are calculated for the MeDIP data. The proportions are calculated as a 
+multinomial distribution, with Confidence intervals calculated via resampling.
 
 # 03_medip_overlap_genome.R
 The script starts with loading the pooled medip peaks object created earlier using 01_dismiss_to_gff.R, and the features list created
