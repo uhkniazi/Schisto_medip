@@ -58,4 +58,11 @@ earlier using the second half of the script create_features_from_gff.R. The over
 multinomial distribution. The confidence intervals are calculated by simulation. We summarize the data as bar plots with error bars for 95% confidence interval. The medip data is also split into groups (7 groups) and distributions calculated for each one 
 separately as well.
 
+# 04_RepEnrich_MeDIP_Analysis.R
+The number of reads sampled from the MeDIP libraries and Control libraries distributed over the repeat classes is imported from the 
+output of RepEnrich. The data is normalized across libraries for size correction, however as we are calculating proprtions within the
+library or sample, this really isn't necessary. The proportions are modelled as a multinomial distribution, P(data | theta), where 
+data is the proportion of reads mapping to a repeat class and theta is the sample type. Sampling from a multinomial distribution will
+generate the confidence intervals and the data is plotted as bar plots.
+
 
