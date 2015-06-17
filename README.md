@@ -56,7 +56,14 @@ multinomial distribution, with Confidence intervals calculated via resampling.
 The script starts with loading the pooled medip peaks object created earlier using 01_dismiss_to_gff.R, and the features list created
 earlier using the second half of the script create_features_from_gff.R. The overlaps of features (query) vs methylation data (subject) is done and the conditional probability i.e. P(y | Theta) - where y is data and Theta is the parameter - is calculated as a 
 multinomial distribution. The confidence intervals are calculated by simulation. We summarize the data as bar plots with error bars for 95% confidence interval. The medip data is also split into groups (7 groups) and distributions calculated for each one 
-separately as well.
+separately as well.  
+  
+The second part of the script imports the bed file of granau repeats, creates GRanges object of those and splits the repeats into 
+main families as a GRangesList object using the factor. It then counts in a very similar manner as before, Repeats overlapping with 
+the MeDIP peaks and sub families of peaks. However a small error was noted, which has been corrected - and has to do with the 
+overlapsAny function - it returns a vector TRUE/FALSE and if there are all FALSE or TRUE in there then doing a table function on that 
+will produce no counts for the absent category - and the matrix will not be produced correctly. Hence we convert the output to a 
+2 level factor which solves the issue.
 
 # 04_RepEnrich_MeDIP_Analysis.R
 The number of reads sampled from the MeDIP libraries and Control libraries distributed over the repeat classes is imported from the 

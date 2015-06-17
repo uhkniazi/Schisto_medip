@@ -96,17 +96,103 @@ sapply(seq_along(lCI), function(x) {
   print(round(lCI[[x]], 2))
 })
 
+########################################################################################
+#### repeat breakdown of granau file
+dfRep = read.csv(file = file.choose(), header = F, sep = '\t')
+col = DataFrame(label=dfRep$V4, class=dfRep$V5, direction=dfRep$V6)
+st = rep('+', times=nrow(dfRep))
+f = which(col$direction == 'reverse')
+st[f] = '-'
 
+oGRrep = GRanges(dfRep$V1, IRanges(dfRep$V2, dfRep$V3), strand=st, mcols=col)
+# save the object for later use
+n = make.names(paste('oGRrep', date(), 'rds'))
+save(oGRrep, file=paste('Objects/', n, sep=''))
 
+# break into granges list
+f = oGRrep$mcols.class
+oGRLrep = split(oGRrep, f)
 
+## count overlaps
+########################### repeat previous script part
+## just rename lFeatures by oGRLrep
+lFeatures = oGRLrep
+lOverlaps = sapply(lFeatures, function(x) overlapsAny(x, oGRpooled))
+mDat = sapply(lOverlaps, table)
 
+rownames(mDat) = c('False', 'True')
 
+# calculate confidence intervals/errors by simulating the data
+ivProb.medip.all = mDat['True',] / rowSums(mDat)['True']
 
+# simulate data as a sample from a multinomial distribution
+# P(y | Theta)
+mDat.medip.all = mDat['True',]
+mSim.medip.all = t(rmultinom(n = 1000, size = 1000, prob = ivProb.medip.all))
+# convert to probability scale for plotting
+mSim.medip.all = mSim.medip.all / rowSums(mSim.medip.all)
+# look at data distribution
+l = barplot(colMeans(mSim.medip.all), ylim = c(0, 0.8), main='MeDIP peaks distribution over repeats', las=2)
+# calculate quantiles for drawing
+m = apply(mSim.medip.all, 2, function(x) quantile(x, c(0.025, 0.975)))
+segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
+segments(l-0.1, y0 = m[1,], l+0.1, y1 = m[1,], lwd=2)
+segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
 
+#######################################################
+### repeat this analysis for all classes of medip peaks
+lCI = vector('list', length = 7)
+lProb = vector('list', length = 7)
+n = c("sf", "s", "m", "sfm", "f", "sm", "fm")
+names(lCI) = n
+names(lProb) = n
+cvNames = names(lCI)
+# loop through each class of medip peak and calculate the proportions
+for (i in 1:length(lCI)){
+  # select pooled peaks from particular class
+  lOverlaps = sapply(lFeatures, function(x) factor(overlapsAny(x, oGRpooled[oGRpooled$groups.lab == cvNames[i]]),levels = c('TRUE', 'FALSE')))
+  mDat = lapply(lOverlaps, table)
+  # some regions do not have any signal so give 0 for TRUE,
+  # do.call does not work correctly in those cases unless we make it a factor
+  mDat = do.call(rbind, mDat)
+  mDat = t(mDat)
+  rownames(mDat) = c('True', 'False')
+  # calculate confidence intervals/errors by simulating the data
+  ivProb.medip = mDat['True',] / rowSums(mDat)['True']
+  lProb[[cvNames[i]]] = ivProb.medip  
+  # simulate data as a sample from a multinomial distribution
+  # P(y | Theta)
+  mDat.medip = mDat['True',]
+  mSim.medip = t(rmultinom(n = 1000, size = 1000, prob = ivProb.medip))
+  # convert to probability scale for plotting and calculate 95% CI
+  mSim.medip = mSim.medip / rowSums(mSim.medip)
+  # calculate quantiles for drawing
+  lCI[[cvNames[i]]] = apply(mSim.medip, 2, function(x) quantile(x, c(0.025, 0.975)))
+}
 
+## collapse the list into a matrix
+col = rainbow(length(cvNames))
+mBar = sapply(lProb, function(x) x)
+mBar = t(mBar)
 
+l2 = barplot(mBar, beside=T, ylim=c(0, 0.7), col=col, main='MeDIP peaks distribution over repeats', las=2)
+legend('topleft', legend = rownames(mBar), fill = col)
 
+# draw error bars
+for(i in 1:nrow(l2)){
+  l = l2[i,]
+  m = lCI[[cvNames[i]]]
+  segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
+  segments(l-0.1, y0 = m[1,], l+0.1, y1 = m[1,], lwd=2)
+  segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
+}
 
+sapply(seq_along(lCI), function(x) {
+  print(names(lCI)[x])
+  print(round(lCI[[x]], 2))
+})
+
+##########################
 
 
 
