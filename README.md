@@ -36,21 +36,18 @@ feature from the casette, the rows representing each gene from that feature, and
 object. The summary is reported in a bar plot and a csv file.
 
 # 03_bis_seq_vs_medip.R  
-NOTE: Changes made to this SCRIPT - Still in progress and will be documented when finished  
 Data published by frank lyko downloaded as bed format. It was imported as a csv file and converted to a GRanges object. The Sequence
-version 5.2 was imported as a Biostrings object (DNAStringSet) and the sequence of each Bs-Seq GRanges object extracted using the
-custom function f_DNAStringSet_GRangesSequenceFromDNAStringSet. Those residues that were C were marked as + stranded ranges while 
-those as G were - stranded ranges. The object was saved as GRanges object and imported directly for future use. The MeDIP data was 
-imported (created earlier using 01_dismiss_to_gff.R) and peaks that should occur in the male are included in the analysis. The BS-Seq
-data is broken down into quantiles of proportions (how many times it was seen / total number of times it was seen). The features 
-object created earlier is used (create_features_from_gff.R) for calculating feature overlaps. The main plots of interest are 
-proportion of MeDIP peak and BS-Seq 5mC distribution over the features, modelled as a multinomial distribution, and confidence 
-intervals calculated by resampling from a multinomial distribution.  
+version 5.2 was imported as a Biostrings object (DNAStringSet). The proportion cutoff for 5mC of > 0.1 was used, and chromosome name 
+W was changed to ZW for compatibility with genome version 5.2. The sequence of each scaffold of each Bs-Seq GRanges object extracted using the custom function f_DNAStringSet_GRangesSequenceFromDNAStringSet. Those residues that were C were marked as + stranded ranges while those as G were - stranded ranges. The MeDIP data was imported (created earlier using 01_dismiss_to_gff.R) and peaks that should occur in the male are included in the analysis.  
+//The BS-Seq data is broken down into quantiles of proportions (how many times it was seen / total number of times it was seen).  
+The features object created earlier is used (create_features_from_gff.R) for calculating feature overlaps. The main plots of interest are proportion of MeDIP peak and BS-Seq 5mC distribution over the features, modelled as a multinomial distribution, and confidence 
+intervals calculated by resampling from a multinomial distribution. 
   
 The second part of the script extends the sizes of the BS-Seq ranges to 2, and loads the dinucleotide sequence from the Biostrings
 object created earlier. The sequences from the - (minus) strand are reverse complimented and the dinucleotide frequencies are
 calculated for the BS-Seq data. Similarly the frequencies are calculated for the MeDIP data. The proportions are calculated as a 
-multinomial distribution, with Confidence intervals calculated via resampling.
+multinomial distribution, with Confidence intervals calculated via resampling. A random sample is also taken from the genome and the 
+dinucleotide frequencies are calculated for comparisons. Data is summarized into bar plots.
 
 # 03_medip_overlap_genome.R
 The script starts with loading the pooled medip peaks object created earlier using 01_dismiss_to_gff.R, and the features list created
