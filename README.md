@@ -47,7 +47,10 @@ The second part of the script extends the sizes of the BS-Seq ranges to 2, and l
 object created earlier. The sequences from the - (minus) strand are reverse complimented and the dinucleotide frequencies are
 calculated for the BS-Seq data. Similarly the frequencies are calculated for the MeDIP data. The proportions are calculated as a 
 multinomial distribution, with Confidence intervals calculated via resampling. A random sample is also taken from the genome and the 
-dinucleotide frequencies are calculated for comparisons. Data is summarized into bar plots.
+dinucleotide frequencies are calculated for comparisons. Data is summarized into bar plots.  
+  
+The third part of the script reads the repeats object created earlier (03_medip_overlap_genome.R), and calculates the distribution
+of the overlaps of these repeat families with medip, bs-seq and the random genomic sample.
 
 # 03_medip_overlap_genome.R
 The script starts with loading the pooled medip peaks object created earlier using 01_dismiss_to_gff.R, and the features list created
