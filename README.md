@@ -29,6 +29,10 @@ The second part of the script uses the gff imported earlier, to create reduced e
 the repeats file RepBasePerpignanSma52.gff. We only use the data from the full chromosomes, and the data is saved as a lFeatures 
 object to be used by later scripts.
 
+# Fanny_downstream_sequences.R
+Very similar to previous script, but extracts only the genes and converts them to downstream regions. Extracts sequences for those 
+regions and writes in a FASTA file with some nucleotide frequencies as outputs.
+
 # 02_features_overlaps_casette.R
 The script uses a casette feature object created earlier (create_features_from_gff.R), Pooled Medip Peaks object created earlier 
 (01_dismiss_to_gff.R) and removes peaks not belonging to any class i.e. 'none'. We create a matrix with each column representing a 
