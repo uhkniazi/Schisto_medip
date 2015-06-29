@@ -41,7 +41,8 @@ object. The summary is reported in a bar plot and a csv file.
 
 # 03_bis_seq_vs_medip.R  
 Data published by frank lyko downloaded as bed format. It was imported as a csv file and converted to a GRanges object. The Sequence
-version 5.2 was imported as a Biostrings object (DNAStringSet). The proportion cutoff for 5mC of > 0.1 was used, and chromosome name 
+version 5.2 was imported as a Biostrings object (DNAStringSet). The proportions are broken down into quantiles and plotted as a 
+histogram to reproduce the figure 1 from lyko's paper. The proportion cutoff for 5mC of > 0.1 was used, and chromosome name 
 W was changed to ZW for compatibility with genome version 5.2. The sequence of each scaffold of each Bs-Seq GRanges object extracted using the custom function f_DNAStringSet_GRangesSequenceFromDNAStringSet. Those residues that were C were marked as + stranded ranges while those as G were - stranded ranges. The MeDIP data was imported (created earlier using 01_dismiss_to_gff.R) and peaks that should occur in the male are included in the analysis.  
 //The BS-Seq data is broken down into quantiles of proportions (how many times it was seen / total number of times it was seen).  
 The features object created earlier is used (create_features_from_gff.R) for calculating feature overlaps. The main plots of interest are proportion of MeDIP peak and BS-Seq 5mC distribution over the features, modelled as a multinomial distribution, and confidence 

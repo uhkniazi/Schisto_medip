@@ -26,7 +26,14 @@ oGRpooled = oGRpooled[seqnames(oGRpooled) %in% gcvChromosomes]
 ## load from here for next use or load the unstranded object
 oGR.bis = f_LoadObject(file.choose())
 ########## remove Cs with 0.1 or less proportions
-f = which(oGR.bis$mcols.proportion > 0.1)
+f = which(oGR.bis$mcols.proportion >= 0.1)
+## create a histogram of the data based on proportions similar to lyko paper figure 1
+x = oGR.bis$mcols.proportion[f]
+s = seq(0.1, to = 1, by = 0.1)
+hist(x, breaks=s, ylab='Frequency', xlab='Proportion', main='Methylation proportions of 5mCs', xaxt='n')
+axis(1, at = s)
+
+f = which(oGR.bis$mcols.proportion >= 0.1)
 oGR.bis = oGR.bis[f]
 gc()
 ## assign strands to the base positions
@@ -130,7 +137,7 @@ mSim.bis.all = mSim.bis.all / rowSums(mSim.bis.all)
 c = 'pink'
 mBar = rbind(ivProb.bis.all)
 rownames(mBar) = c('BS-Seq')
-l = barplot(mBar, beside=T, ylim=c(0, 0.8), col=c, main='BS-Seq data at 0.1 cutoff')
+l = barplot(mBar, beside=T, ylim=c(0, 0.8), col=c, main='BS-Seq data at 0.9 cutoff', ylab='fraction')
 ## make error bars
 m = apply(mSim.bis.all, 2, function(x) quantile(x, c(0.025, 0.975)))
 segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
@@ -141,7 +148,7 @@ segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
 c = rainbow(2)
 mBar = rbind(ivProb.medip.all, ivProb.bis.all)
 rownames(mBar) = c('MeDIP', 'BS-Seq')
-l2 = barplot(mBar, beside=T, ylim=c(0, 0.8), col=c, main='All MeDIP and BS-Seq data')
+l2 = barplot(mBar, beside=T, ylim=c(0, 0.8), col=c, main='All MeDIP and BS-Seq data', ylab='fraction')
 legend('topleft', legend = rownames(mBar), fill = c)
 l = l2[1,]
 ## make error bars
@@ -287,7 +294,7 @@ mSim.bis.nuc = mSim.bis.nuc / rowSums(mSim.bis.nuc)
 
 ### plot the bs-seq data separately
 l = barplot(ivProb.bis.nuc, beside=T, ylim=c(0, 0.5), col='pink', main='Dinucleotide Frequencies BS-Seq', 
-            sub='Proportion > 0.1')
+            sub='Proportion >= 0.1', ylab='fraction')
 ## make error bars
 m = apply(mSim.bis.nuc, 2, function(x) quantile(x, c(0.025, 0.975)))
 segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
@@ -299,7 +306,7 @@ segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
 c = rainbow(2)
 mBar = rbind(ivProb.medip.nuc, ivProb.bis.nuc)
 rownames(mBar) = c('MeDIP', 'BS-Seq')
-l2 = barplot(mBar, beside=T, ylim=c(0, 0.5), col=c, main='Dinucleotide Frequencies')
+l2 = barplot(mBar, beside=T, ylim=c(0, 0.5), col=c, main='Dinucleotide Frequencies', ylab='fraction')
 legend('topright', legend = rownames(mBar), fill = c)
 l = l2[1,]
 ## make error bars
@@ -337,8 +344,8 @@ mSim.ran.nuc = mSim.ran.nuc / rowSums(mSim.ran.nuc)
 ## plot the 3 sets together
 c = rainbow(3)
 mBar = rbind(ivProb.medip.nuc, ivProb.bis.nuc, ivProb.ran.nuc)
-rownames(mBar) = c('MeDIP', 'BS-Seq', 'Random')
-l2 = barplot(mBar, beside=T, ylim=c(0, 0.5), col=c, main='Dinucleotide Frequencies')
+rownames(mBar) = c('MeDIP', 'BS-Seq', 'Background')
+l2 = barplot(mBar, beside=T, ylim=c(0, 0.5), col=c, main='Dinucleotide Frequencies', ylab='fraction')
 legend('topright', legend = rownames(mBar), fill = c)
 l = l2[1,]
 ## make error bars
@@ -379,7 +386,15 @@ f_sim_ci = function(prob){
 #######################
 # load the repeats object 
 oGRrep = f_LoadObject(file.choose())
-oGRrep = oGRrep[seqnames(oGRrep) %in% gcvChromosomes]
+
+# rename all the W chromosome to ZW
+r1 = oGRrep[seqnames(oGRrep) %in% gcvChromosomes]
+r2 = oGRrep[seqnames(oGRrep) == 'Schisto_mansoni.Chr_W']
+r1 = GRanges(as.character(seqnames(r1)), IRanges(start(r1), end(r1)), strand(r1), DataFrame(mcols(r1)))
+r2 = GRanges('Schisto_mansoni.Chr_ZW', IRanges(start(r2), end(r2)), strand(r2), DataFrame(mcols(r2)))
+oGRrep = c(r1, r2)
+
+#oGRrep = oGRrep[seqnames(oGRrep) %in% gcvChromosomes]
 
 f = oGRrep$mcols.class
 oGRLrep = split(oGRrep, f)
@@ -402,7 +417,8 @@ mBar = rbind(ivMed, ivBis, ivRan)
 rownames(mBar) = c('MeDIP', 'BS-Seq', 'Background')
 c = rainbow(3)
 
-l2 = barplot(mBar, beside=T, las=2, main='Distribution over Repeats', col=c, ylim=c(0, 0.6), sub='BS-Seq cutoff > 0.9')
+l2 = barplot(mBar, beside=T, las=2, main='Distribution over Repeats', col=c, ylim=c(0, 0.6), sub='BS-Seq cutoff >= 0.1',
+             ylab='fraction')
 legend('topright', legend = rownames(mBar), fill=c)
 
 # draw error bars
