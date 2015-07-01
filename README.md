@@ -75,6 +75,9 @@ The number of reads sampled from the MeDIP libraries and Control libraries distr
 output of RepEnrich. The data is normalized across libraries for size correction, however as we are calculating proprtions within the
 library or sample, this really isn't necessary. The proportions are modelled as a multinomial distribution, P(data | theta), where 
 data is the proportion of reads mapping to a repeat class and theta is the sample type. Sampling from a multinomial distribution will
-generate the confidence intervals and the data is plotted as bar plots.
+generate the confidence intervals and the data is plotted as bar plots.  
+  
+In the second part of the script, we load the GRanges objects of the pooled MeDIP peaks and the repeat locations objects. Count how many overlaps MeDIP peaks have with the Repeat classes. Produce bar plots of MeDIP peak proportions and the RepEnrich count data for
+the unmethylated library.
 
 
