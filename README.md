@@ -80,4 +80,7 @@ generate the confidence intervals and the data is plotted as bar plots.
 In the second part of the script, we load the GRanges objects of the pooled MeDIP peaks and the repeat locations objects. Count how many overlaps MeDIP peaks have with the Repeat classes. Produce bar plots of MeDIP peak proportions and the RepEnrich count data for
 the unmethylated library.
 
+# 05_RepEnrich_RNASeq_Analysis.R
+Very similar analysis to previous script, but uses the RNA-Seq data and 2 conditions. We model the data as a multinomial proportion 
+and plot the results. Furthermore, DESeq2 is used as well for testing for differential expression on count data.
 
