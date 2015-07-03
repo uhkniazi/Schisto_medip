@@ -33,7 +33,7 @@ s = seq(0.1, to = 1, by = 0.1)
 hist(x, breaks=s, ylab='Frequency', xlab='Proportion', main='Methylation proportions of 5mCs', xaxt='n')
 axis(1, at = s)
 
-f = which(oGR.bis$mcols.proportion >= 0.1)
+f = which(oGR.bis$mcols.proportion >= 0.9)
 oGR.bis = oGR.bis[f]
 gc()
 ## assign strands to the base positions
@@ -417,7 +417,7 @@ mBar = rbind(ivMed, ivBis, ivRan)
 rownames(mBar) = c('MeDIP', 'BS-Seq', 'Background')
 c = rainbow(3)
 
-l2 = barplot(mBar, beside=T, las=2, main='Distribution over Repeats', col=c, ylim=c(0, 0.6), sub='BS-Seq cutoff >= 0.1',
+l2 = barplot(mBar, beside=T, las=2, main='Distribution over Repeats', col=c, ylim=c(0, 0.6), sub='BS-Seq cutoff >= 0.9',
              ylab='fraction')
 legend('topright', legend = rownames(mBar), fill=c)
 

@@ -43,7 +43,6 @@ sun = colMeans(mDat.p[16:18,])
 #######################
 ## function to simulate
 f_sim_multi = function(prob){
-  m = t(rmultinom(n = 1000, size = 1000, prob = prob))
   # convert to probability scale for plotting
   return(m/rowSums(m))
 }
@@ -86,7 +85,7 @@ oGRpooled = oGRpooled[oGRpooled$groups.lab != 'none']
 
 # load the repeats object 
 oGRrep = f_LoadObject(file.choose())
-
+strand(oGRrep) = '*'
 # rename all the W chromosome to ZW
 r1 = oGRrep[seqnames(oGRrep) %in% gcvChromosomes]
 r2 = oGRrep[seqnames(oGRrep) == 'Schisto_mansoni.Chr_W']
