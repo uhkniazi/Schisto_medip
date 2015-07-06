@@ -43,6 +43,7 @@ sun = colMeans(mDat.p[16:18,])
 #######################
 ## function to simulate
 f_sim_multi = function(prob){
+  m = t(rmultinom(n = 1000, size = 1000, prob = prob))
   # convert to probability scale for plotting
   return(m/rowSums(m))
 }
@@ -51,7 +52,6 @@ f_sim_ci = function(prob){
   m = f_sim_multi(prob)
   return(apply(m, 2, function(x) quantile(x, c(0.025, 0.975))))
 }
-
 #################################
 ## plots with error bars
 mBar = rbind(fme, mme, sme, fun, mun, sun)
@@ -104,7 +104,7 @@ mMed = sapply(mMed, table)
 
 ivMed = mMed['TRUE',] / rowSums(mMed)['TRUE']
 ivMed = ivMed[names(ivRep)]
-
+# mMed = mMed[,names(ivRep)]
 #### plot the data
 mBar = rbind(ivMed, ivRep)
 rownames(mBar) = c('MeDIP', 'Unmethylated')
@@ -123,6 +123,34 @@ for (i in 1:nrow(mBar)){
   segments(l-0.1, y0 = m[1,], l+0.1, y1 = m[1,], lwd=2)
   segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
 }
+
+# compare the repeat classes to 
+# the background i.e. unmethylated classes
+# total trials
+n = rowSums(mMed)['TRUE']
+p.vals = rep(NA, length=(length(ivRep)))
+names(p.vals) = names(ivRep)
+for (i in 1:length(ivRep))
+{
+  nm = names(ivRep)[i]
+  x = mMed['TRUE', nm]
+  p.vals[i] = binom.test(x, n, p = ivRep[nm])$p.value
+  print(paste(names(ivRep)[i], signif(p.vals[i], 3)))
+}
+
+p.adj = p.adjust(p.vals, method = 'BH')
+as.data.frame(print(signif(p.adj, 3)))
+# # fisher odds ratio test
+# p.vals = rep(NA, length=(length(ivRep)))
+# names(p.vals) = names(ivRep)
+# for (i in 1:length(ivRep)){
+#   o1 = c(mMed['TRUE', i], n-mMed['TRUE',i])
+#   o2 = round(ivRep[i] * n)
+#   o2 = c(o2, n-o2)
+#   m = matrix(c(o1, o2), nrow=2)
+#   p.vals[i] = fisher.test(m, simulate.p.value = T)$p.value
+# }
+
 
 #######################################################################
 ##### breakdown into lifecycle stages
