@@ -128,6 +128,10 @@ for (i in 1:nrow(mBar)){
 # the background i.e. unmethylated classes
 # total trials
 n = rowSums(mMed)['TRUE']
+# under the null hypothesis the expected proportion should look like
+df = data.frame(Expected.prop=round(ivRep, 3), Expected.count=round(n*ivRep, 0))
+df = data.frame(Observed.prop=round(ivMed, 3), Observed.count=mMed['TRUE', names(ivRep)])
+
 p.vals = rep(NA, length=(length(ivRep)))
 names(p.vals) = names(ivRep)
 for (i in 1:length(ivRep))
