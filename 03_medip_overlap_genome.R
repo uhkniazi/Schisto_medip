@@ -21,6 +21,7 @@ lFeatures = f_LoadObject(file.choose())
 # remove the medip peaks from class 'none'
 f = which(oGRpooled$groups.lab == 'none')
 oGRpooled = oGRpooled[-f]
+oGRpooled = oGRpooled[seqnames(oGRpooled) %in% gcvChromosomes]
 
 ## count over features granges 
 lFeatures$gene = NULL
@@ -46,6 +47,31 @@ m = apply(mSim.medip.all, 2, function(x) quantile(x, c(0.025, 0.975)))
 segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
 segments(l-0.1, y0 = m[1,], l+0.1, y1 = m[1,], lwd=2)
 segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
+
+## perform binomial test for observed to expected
+ivFeature.prop = colSums(mDat)
+ivFeature.prop = ivFeature.prop/sum(ivFeature.prop)
+# total trials
+n = rowSums(mDat)['True']
+ivFeature.exp = n * ivFeature.prop
+# expected values
+df = data.frame(Expected.prop=round(ivFeature.prop, 2), Expected.count=round(ivFeature.exp, 0))
+# observed values
+df = data.frame(Observed.prop=round(ivProb.medip.all, 2), Observed.count=round(mDat.medip.all, 0))
+
+# binomial test
+p.vals = rep(NA, length=(length(ivProb.medip.all)))
+names(p.vals) = names(ivProb.medip.all)
+for (i in 1:length(p.vals))
+{
+  nm = names(p.vals)[i]
+  x = mDat.medip.all[nm]
+  p.vals[i] = binom.test(x, n, p = ivFeature.prop[nm])$p.value
+  print(paste(names(p.vals)[i], signif(p.vals[i], 3)))
+}
+
+p.adj = p.adjust(p.vals, method = 'BH')
+as.data.frame(print(signif(p.adj, 3)))
 
 #######################################################
 ### repeat this analysis for all classes of medip peaks
@@ -103,6 +129,8 @@ col = DataFrame(label=dfRep$V4, class=dfRep$V5, direction=dfRep$V6)
 st = rep('+', times=nrow(dfRep))
 f = which(col$direction == 'reverse')
 st[f] = '-'
+## set strands to * as we do not know direction
+st = '*'
 
 oGRrep = GRanges(dfRep$V1, IRanges(dfRep$V2, dfRep$V3), strand=st, mcols=col)
 # save the object for later use

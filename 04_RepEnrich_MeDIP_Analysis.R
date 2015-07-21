@@ -82,7 +82,7 @@ for (i in 1:nrow(mBar)){
 ## load the medip data
 oGRpooled = f_LoadObject(file.choose())
 oGRpooled = oGRpooled[oGRpooled$groups.lab != 'none']
-
+oGRpooled = oGRpooled[seqnames(oGRpooled) %in% gcvChromosomes]
 # load the repeats object 
 oGRrep = f_LoadObject(file.choose())
 strand(oGRrep) = '*'
