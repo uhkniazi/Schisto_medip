@@ -84,3 +84,15 @@ the unmethylated library.
 Very similar analysis to previous script, but uses the RNA-Seq data and 2 conditions. We model the data as a multinomial proportion 
 and plot the results. Furthermore, DESeq2 is used as well for testing for differential expression on count data.
 
+# 06_bis_medip_dinucleotides.R
+Calculates dinucleotide frequencies for the background, medip and bs-seq data. The bs seq object is a GRanges object created earlier
+, the MeDIP object is the collection of pooled medip peaks and 'seq' is the biostrings class DNAStringSet object for genome version
+5.2 cereated earlier. BS-seq object is processed similar to as decribed earlier 03_bis_seq_vs_medip.R. The GRanges object for the
+random sample from the genome is created by splitting each chromosome into bins of size 500, and taking X samples from those 
+positions to create a background distribution. The dinucleotide frequencies are calculated for each of the 3 GRanges objects. The 
+proportion of CA, CC, CG and CT is used to sample from a multinomial distribution 1000 times - this is used in the binomial test 
+to compare observed frequency with expected frequency.
+
+
+
+
