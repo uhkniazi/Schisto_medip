@@ -9,7 +9,17 @@ one of the first scripts in the series. used to generate an initial profile of t
 it will generate some plots based on the peak distribution (ie. counts) in the three lifecycle stages. furthermore, based on the
 initial filtering criteria, it will choose peaks (if they are present in 2 of 2, or 1 of 2 replicates) and further
 subdivide them into groups i.e. peaks present in 2 lifecycle stages 1 etc. it also generates a gff which can be used
-for further analysis in a genome browser and an object file used for next scripts.
+for further analysis in a genome browser and an object file used for next scripts.  
+  
+Some additions have been made to the script now:  
+1- The exact peaks that are common in 2 samples are calculated in a more sophisticated manner so as to keep track of which peak is 
+overlapping, as we need the original p-values.  
+2- Correlation plots.  
+3- Fisher combined p-values.  
+4- GFF files and CSV files for each sample.  
+5- oGRLsamples.fisher.Date is the data structure of GRangesList type that has peaks for each sample with additional MACS+DISMISS  
+information. 
+NOTE: will try to use these in next scripts instead of the pooled object.
 
 # Schisto_medip_classes.R
 contains functions and classes used by the script.

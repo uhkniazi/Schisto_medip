@@ -81,6 +81,7 @@ df = f_dfGetMatchingStrandsFromGRanges(oGRLsamples[['s2']], oGRLsamples[['s3']])
 t = table(s2=df$s.query, s3=df$s.subject)
 print(t)
 print(paste('total =', sum(rowSums(t))))#, 'out of', length(oGRLsamples[['s2']]) ))
+
 # 
 # df = f_dfGetMatchingStrandsFromGRanges(oGRLsamples[[3]], oGRLsamples[[2]])
 # t = table(s3=df$s.query, s2=df$s.subject)
@@ -197,3 +198,183 @@ save(oGRpooled, file=paste('Objects/', n, sep=''))
 n = make.names(paste('oGRpooled.medip.peaks', date(), '.gff'))
 dir.create('Results_scripts/Gff_files', showWarnings = F)
 export(oGRpooled, con=paste('Results_scripts/Gff_files/', n, sep=''), format = 'gff3')
+
+
+### correlations for data in replicates
+# i = grep('s', oGRpooled$groups.lab)
+# oGRpooled.s = oGRpooled[i]
+#oGRLsamples.resize = resize(oGRLsamples, fix = 'center', width = 5)
+
+## choose the sample from a lifecycle stage
+s1 = oGRLsamples[['s2']]
+s2 = oGRLsamples[['s3']]
+
+# # do the matching
+# d1 = findOverlaps(oGRpooled.s, s1, select='first')
+# d1 = na.omit(d1)
+# s1 = s1[unique(d1)]
+# 
+# d1 = findOverlaps(oGRpooled.s, s2, select='first')
+# d1 = na.omit(d1)
+# s2 = s2[unique(d1)]
+
+# select only those ranges that match only once, some ranges match more than one 
+# due to their sizes
+length(s1); length(s2)
+d1 = findOverlaps(s2, s1, select='first')
+d1 = na.omit(d1)
+s1 = s1[unique(d1)]
+# remove the peaks from the second range that match more than one
+length(s1); length(s2)
+d1 = findOverlaps(s1, s2, select='first')
+d1 = na.omit(d1)
+s2 = s2[unique(d1)]
+length(s1); length(s2)
+
+# get the data for the peaks
+dfS1 = data.frame(pileup=s1$pileup, fold_enrichment=s1$fold_enrichment, q.value=10^(-1 * s1$neg.log10.qval), 
+                  neg.log10.qval=s1$neg.log10.qval)
+dfS2 = data.frame(pileup=s2$pileup, fold_enrichment=s2$fold_enrichment, q.value=10^(-1 * s2$neg.log10.qval), 
+                  neg.log10.qval=s2$neg.log10.qval)
+
+plot(log(dfS1$pileup), log(dfS2$pileup), xlab='Replicate 1', ylab='Replicate 2', main='Log Read Depth', pch=20, col='lightgrey')
+lines(lowess(log(dfS1$pileup), log(dfS2$pileup), f=2/10), col='red', lwd=2)
+cor.test(log(dfS1$pileup), log(dfS2$pileup))
+
+plot(log(dfS1$fold_enrichment), log(dfS2$fold_enrichment), xlab='Replicate 1', ylab='Replicate 2',
+     main='Log Fold Enrichment', pch=20, col='lightgrey')
+lines(lowess(log(dfS1$fold_enrichment), log(dfS2$fold_enrichment), f=2/10), col='red', lwd=2)
+cor.test(log(dfS1$fold_enrichment), log(dfS2$fold_enrichment))
+
+# combine the p.values from the data to produce a single p-value
+# based on fishers method
+mP = cbind(dfS1$q.value, dfS2$q.value)
+ivFish = apply(mP, 1, f_fishersMethod)
+ivFish.log = -1 * log10(ivFish)
+
+s1$fisher.p.value = ivFish
+s1$neg.log10.fisher.p.value = ivFish.log
+
+s2$fisher.p.value = ivFish
+s2$neg.log10.fisher.p.value = ivFish.log
+
+somule.2 = s1
+somule.3 = s2
+
+## repeat this for the other 2 lifecycle stages
+s1 = oGRLsamples[['f2']]
+s2 = oGRLsamples[['f4']]
+length(s1); length(s2)
+d1 = findOverlaps(s1, s2, select='first')
+d1 = na.omit(d1)
+s2 = s2[unique(d1)]
+# remove the peaks from the second range that match more than one
+length(s1); length(s2)
+d1 = findOverlaps(s2, s1, select='first')
+d1 = na.omit(d1)
+s1 = s1[unique(d1)]
+length(s1); length(s2)
+
+# get the data for the peaks
+dfS1 = data.frame(pileup=s1$pileup, fold_enrichment=s1$fold_enrichment, q.value=10^(-1 * s1$neg.log10.qval), 
+                  neg.log10.qval=s1$neg.log10.qval)
+dfS2 = data.frame(pileup=s2$pileup, fold_enrichment=s2$fold_enrichment, q.value=10^(-1 * s2$neg.log10.qval), 
+                  neg.log10.qval=s2$neg.log10.qval)
+
+plot(log(dfS1$pileup), log(dfS2$pileup), xlab='Replicate 1', ylab='Replicate 2', main='Log Read Depth', pch=20, col='lightgrey')
+lines(lowess(log(dfS1$pileup), log(dfS2$pileup), f=2/10), col='red', lwd=2)
+cor.test(log(dfS1$pileup), log(dfS2$pileup))
+
+plot(log(dfS1$fold_enrichment), log(dfS2$fold_enrichment), xlab='Replicate 1', ylab='Replicate 2',
+     main='Log Fold Enrichment', pch=20, col='lightgrey')
+lines(lowess(log(dfS1$fold_enrichment), log(dfS2$fold_enrichment), f=2/10), col='red', lwd=2)
+cor.test(log(dfS1$fold_enrichment), log(dfS2$fold_enrichment))
+
+# combine the p.values from the data to produce a single p-value
+# based on fishers method
+mP = cbind(dfS1$q.value, dfS2$q.value)
+ivFish = apply(mP, 1, f_fishersMethod)
+ivFish.log = -1 * log10(ivFish)
+
+s1$fisher.p.value = ivFish
+s1$neg.log10.fisher.p.value = ivFish.log
+
+s2$fisher.p.value = ivFish
+s2$neg.log10.fisher.p.value = ivFish.log
+
+female.2 = s1
+female.4 = s2
+
+## for males
+s1 = oGRLsamples[['m2']]
+s2 = oGRLsamples[['m3']]
+length(s1); length(s2)
+d1 = findOverlaps(s2, s1, select='first')
+d1 = na.omit(d1)
+s1 = s1[unique(d1)]
+# remove the peaks from the second range that match more than one
+length(s1); length(s2)
+d1 = findOverlaps(s1, s2, select='first')
+d1 = na.omit(d1)
+s2 = s2[unique(d1)]
+length(s1); length(s2)
+# one more time as some ranges in s1 are long and overlap more than one s2
+d1 = findOverlaps(s2, s1, select='first')
+d1 = na.omit(d1)
+s1 = s1[unique(d1)]
+# remove the peaks from the second range that match more than one
+length(s1); length(s2)
+
+
+# get the data for the peaks
+dfS1 = data.frame(pileup=s1$pileup, fold_enrichment=s1$fold_enrichment, q.value=10^(-1 * s1$neg.log10.qval), 
+                  neg.log10.qval=s1$neg.log10.qval)
+dfS2 = data.frame(pileup=s2$pileup, fold_enrichment=s2$fold_enrichment, q.value=10^(-1 * s2$neg.log10.qval), 
+                  neg.log10.qval=s2$neg.log10.qval)
+
+plot(log(dfS1$pileup), log(dfS2$pileup), xlab='Replicate 1', ylab='Replicate 2', main='Log Read Depth', pch=20, col='lightgrey')
+lines(lowess(log(dfS1$pileup), log(dfS2$pileup), f=2/10), col='red', lwd=2)
+cor.test(log(dfS1$pileup), log(dfS2$pileup))
+
+plot(log(dfS1$fold_enrichment), log(dfS2$fold_enrichment), xlab='Replicate 1', ylab='Replicate 2',
+     main='Log Fold Enrichment', pch=20, col='lightgrey')
+lines(lowess(log(dfS1$fold_enrichment), log(dfS2$fold_enrichment), f=2/10), col='red', lwd=2)
+cor.test(log(dfS1$fold_enrichment), log(dfS2$fold_enrichment))
+
+# combine the p.values from the data to produce a single p-value
+# based on fishers method
+mP = cbind(dfS1$q.value, dfS2$q.value)
+ivFish = apply(mP, 1, f_fishersMethod)
+ivFish.log = -1 * log10(ivFish)
+
+s1$fisher.p.value = ivFish
+s1$neg.log10.fisher.p.value = ivFish.log
+
+s2$fisher.p.value = ivFish
+s2$neg.log10.fisher.p.value = ivFish.log
+
+male.2 = s1
+male.3 = s2
+
+# make a new GRanges object
+oGRLsamples.fisher = GRangesList(s2=somule.2, s3=somule.3, f2=female.2, f4=female.4, m2=male.2, m3=male.3)
+
+md = list(desc='peaks common in each lifecycle stage with fisher p.values', date=paste(date()))
+metadata(oGRLsamples.fisher) = md
+n = make.names(paste('oGRLsamples.fisher', date(), '.rds'))
+dir.create('Objects', showWarnings = F)
+save(oGRLsamples.fisher, file=paste('Objects/', n, sep=''))
+
+## create a gff for each sample
+for (i in 1:length(oGRLsamples.fisher)){
+  r = oGRLsamples.fisher[[i]]
+  mc = as.data.frame(mcols(r))
+  mc = data.frame(apply(mc, 2, function(x) signif(x, 3)))
+  mcols(r) = mc
+  n = make.names(paste('peaks', names(oGRLsamples.fisher)[i], date(), 'gff'))
+  dir.create('Results_scripts/Gff_files', showWarnings = F)
+  export(r, con=paste('Results_scripts/Gff_files/', n, sep=''), format = 'gff3')
+  n = make.names(paste('peaks', names(oGRLsamples.fisher)[i], date(), 'csv'))
+  write.csv(as.data.frame(r), file=paste('Results_scripts/', n, sep=''))  
+}
+
