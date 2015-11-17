@@ -110,95 +110,97 @@ print(t)
 print(paste('total =', sum(rowSums(t))))
 #print(paste(sum(rowSums(t)), 'out of', length(oGRLsamples[['m2']]) ))
 
+
+##### Remove this section uptil TAG_1 as pooling is done in a separate script
 ## classify data into groups
-## how many unique classes
-gr = unlist(oGRLsamples)
-print(paste('Total number of pooled peaks',length(gr)))
-gr = reduce(gr)
-print(paste('Total number of unique peaks',length(gr)))
-# create a binary matrix with columns as samples and rows as methylated regions
-mOverlap = matrix(NA, nrow = length(gr), ncol = length(oGRLsamples))
-rownames(mOverlap) = 1:length(gr)
-colnames(mOverlap) = names(oGRLsamples)
-# check which vector (column vector) overlaps in which samples
-# fill each column with overlap vector
-n = names(oGRLsamples)
-for (i in 1:length(n)){
-  v = overlapsAny(gr, oGRLsamples[[n[i]]])
-  mOverlap[,n[i]] = v
-}
-
-# a peak should be TRUE in 1 or 2 replicates at least - set iFilterSize variable
-# adding the row values for replicates e.g. s1, s2 and s3 will give a count of 0 to 3
-# however we have removed the worst sample so we are adding only 2 samples
-s = mOverlap[,'s2'] + mOverlap[,'s3']
-f = mOverlap[,'f2'] + mOverlap[,'f4']
-m = mOverlap[,'m2'] + mOverlap[,'m3']
-# convert to a boolean vector depending on cutoff point
-s = s > iFilterSize
-f = f > iFilterSize
-m = m > iFilterSize
-
-# join the 3 vectors into a matrix N X 3 
-mOverlap.2 = cbind(s, f, m)
-rownames(mOverlap.2) = 1:length(gr)
-
-# not using this filter anymore
-# # merge the sample columns i.e. if e.g. for somules it is true in any of the 3 
-# # samples then use it as true or else false by using an OR function
-# s = mOverlap[,'s1'] | mOverlap[,'s2'] | mOverlap[,'s3']
-# f = mOverlap[,'f2'] | mOverlap[,'f3'] | mOverlap[,'f4']
-# m = mOverlap[,'m1'] | mOverlap[,'m2'] | mOverlap[,'m3']
+# ## how many unique classes
+# gr = unlist(oGRLsamples)
+# print(paste('Total number of pooled peaks',length(gr)))
+# gr = reduce(gr)
+# print(paste('Total number of unique peaks',length(gr)))
+# # create a binary matrix with columns as samples and rows as methylated regions
+# mOverlap = matrix(NA, nrow = length(gr), ncol = length(oGRLsamples))
+# rownames(mOverlap) = 1:length(gr)
+# colnames(mOverlap) = names(oGRLsamples)
+# # check which vector (column vector) overlaps in which samples
+# # fill each column with overlap vector
+# n = names(oGRLsamples)
+# for (i in 1:length(n)){
+#   v = overlapsAny(gr, oGRLsamples[[n[i]]])
+#   mOverlap[,n[i]] = v
+# }
 # 
+# # a peak should be TRUE in 1 or 2 replicates at least - set iFilterSize variable
+# # adding the row values for replicates e.g. s1, s2 and s3 will give a count of 0 to 3
+# # however we have removed the worst sample so we are adding only 2 samples
+# s = mOverlap[,'s2'] + mOverlap[,'s3']
+# f = mOverlap[,'f2'] + mOverlap[,'f4']
+# m = mOverlap[,'m2'] + mOverlap[,'m3']
+# # convert to a boolean vector depending on cutoff point
+# s = s > iFilterSize
+# f = f > iFilterSize
+# m = m > iFilterSize
+# 
+# # join the 3 vectors into a matrix N X 3 
 # mOverlap.2 = cbind(s, f, m)
 # rownames(mOverlap.2) = 1:length(gr)
-par(p.old)
-# take a sample of the rows to create classes using dist and hclust
-# easy way to cut is using a hclust function
-set.seed(123)
-x = sample(1:length(gr), size = 1000, replace = F)
-mOverlap.2.s = mOverlap.2[x,]
-
-dm = dist(mOverlap.2.s, method = 'binary')
-hc = hclust(dm)
-#plot(hc, labels=F, hang=0)
-cp = cutree(hc, h = 0.2) # or cut it as 7 as there are 2^3 -1 possible classes
-# get a new matrix based on these cutpoint members
-mGroups = NULL # this is a matrix of all possible combinations/classes
-for (i in 1:length(unique(cp))){
-  v = colSums(mOverlap.2.s[cp == i, ])
-  mGroups = rbind(mGroups, as.logical(v))
-}
-colnames(mGroups) = colnames(mOverlap.2)
-print('Possible groups in the data')
-print(mGroups)
-# assign a group to each member of the full matrix
-groups = rep(NA, length.out=nrow(mOverlap.2))
-for (i in 1:length(unique(cp))){
-  # vectorized match by using a single &
-  f = (mOverlap.2[,1] == mGroups[i,1]) & (mOverlap.2[,2] == mGroups[i,2]) & (mOverlap.2[,3] == mGroups[i,3])
-  groups[f] = i
-}
-#groups.lab = factor(groups, labels = c('sfm', 'sf', 'sm', 's', 'f', 'm', 'fm'))
-groups.lab = factor(groups, labels = c('none', 'sf', 's', 'm', 'sfm', 'f', 'sm', 'fm'))
-print('Group count'); print(table(groups))
-print('Group count with labels'); print(table(groups.lab))
-# final data frame
-dfPeakGroups = data.frame(groups.lab, groups, mOverlap.2)
-
-oGRpooled = gr
-mcols(oGRpooled) = dfPeakGroups
-md = list(groups=mGroups, desc='groups created by 01_dismiss_to_gff.R using iFilter = 1', date=paste(date()))
-metadata(oGRpooled) = md
-n = make.names(paste('oGRpooled.medip.peaks', date(), '.rds'))
-dir.create('Objects', showWarnings = F)
-save(oGRpooled, file=paste('Objects/', n, sep=''))
-
-## create a gff of the pooled peaks and their groups
-n = make.names(paste('oGRpooled.medip.peaks', date(), '.gff'))
-dir.create('Results_scripts/Gff_files', showWarnings = F)
-export(oGRpooled, con=paste('Results_scripts/Gff_files/', n, sep=''), format = 'gff3')
-
+# 
+# # not using this filter anymore
+# # # merge the sample columns i.e. if e.g. for somules it is true in any of the 3 
+# # # samples then use it as true or else false by using an OR function
+# # s = mOverlap[,'s1'] | mOverlap[,'s2'] | mOverlap[,'s3']
+# # f = mOverlap[,'f2'] | mOverlap[,'f3'] | mOverlap[,'f4']
+# # m = mOverlap[,'m1'] | mOverlap[,'m2'] | mOverlap[,'m3']
+# # 
+# # mOverlap.2 = cbind(s, f, m)
+# # rownames(mOverlap.2) = 1:length(gr)
+# par(p.old)
+# # take a sample of the rows to create classes using dist and hclust
+# # easy way to cut is using a hclust function
+# set.seed(123)
+# x = sample(1:length(gr), size = 1000, replace = F)
+# mOverlap.2.s = mOverlap.2[x,]
+# 
+# dm = dist(mOverlap.2.s, method = 'binary')
+# hc = hclust(dm)
+# #plot(hc, labels=F, hang=0)
+# cp = cutree(hc, h = 0.2) # or cut it as 7 as there are 2^3 -1 possible classes
+# # get a new matrix based on these cutpoint members
+# mGroups = NULL # this is a matrix of all possible combinations/classes
+# for (i in 1:length(unique(cp))){
+#   v = colSums(mOverlap.2.s[cp == i, ])
+#   mGroups = rbind(mGroups, as.logical(v))
+# }
+# colnames(mGroups) = colnames(mOverlap.2)
+# print('Possible groups in the data')
+# print(mGroups)
+# # assign a group to each member of the full matrix
+# groups = rep(NA, length.out=nrow(mOverlap.2))
+# for (i in 1:length(unique(cp))){
+#   # vectorized match by using a single &
+#   f = (mOverlap.2[,1] == mGroups[i,1]) & (mOverlap.2[,2] == mGroups[i,2]) & (mOverlap.2[,3] == mGroups[i,3])
+#   groups[f] = i
+# }
+# #groups.lab = factor(groups, labels = c('sfm', 'sf', 'sm', 's', 'f', 'm', 'fm'))
+# groups.lab = factor(groups, labels = c('none', 'sf', 's', 'm', 'sfm', 'f', 'sm', 'fm'))
+# print('Group count'); print(table(groups))
+# print('Group count with labels'); print(table(groups.lab))
+# # final data frame
+# dfPeakGroups = data.frame(groups.lab, groups, mOverlap.2)
+# 
+# oGRpooled = gr
+# mcols(oGRpooled) = dfPeakGroups
+# md = list(groups=mGroups, desc='groups created by 01_dismiss_to_gff.R using iFilter = 1', date=paste(date()))
+# metadata(oGRpooled) = md
+# n = make.names(paste('oGRpooled.medip.peaks', date(), '.rds'))
+# dir.create('Objects', showWarnings = F)
+# save(oGRpooled, file=paste('Objects/', n, sep=''))
+# 
+# ## create a gff of the pooled peaks and their groups
+# n = make.names(paste('oGRpooled.medip.peaks', date(), '.gff'))
+# dir.create('Results_scripts/Gff_files', showWarnings = F)
+# export(oGRpooled, con=paste('Results_scripts/Gff_files/', n, sep=''), format = 'gff3')
+#### TAG_1 - removed until here.
 
 ### correlations for data in replicates
 # i = grep('s', oGRpooled$groups.lab)
