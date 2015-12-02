@@ -19,7 +19,10 @@ overlapping, as we need the original p-values.
 4- GFF files and CSV files for each sample.  
 5- oGRLsamples.fisher.Date is the data structure of GRangesList type that has peaks for each sample with additional MACS+DISMISS  
 information. 
-NOTE: will try to use these in next scripts instead of the pooled object.
+NOTE: will try to use these in next scripts instead of the pooled object.  
+
+# 01_02_combine_replicates.R
+Takes the oGRLsamples.fisher created in script 01_dismiss_to_gff.R and combines lifecycle replicates into one representative for the lifecycle stage. https://www.evernote.com/shard/s288/nl/38698211/5153ebd3-f380-4e04-8aad-690c7482b3d4
 
 # Schisto_medip_classes.R
 contains functions and classes used by the script.
@@ -40,14 +43,20 @@ the repeats file RepBasePerpignanSma52.gff. We only use the data from the full c
 object to be used by later scripts.
 
 # Fanny_downstream_sequences.R
+# Fanny_downstream_sequences_human.R
 Very similar to previous script, but extracts only the genes and converts them to downstream regions. Extracts sequences for those 
-regions and writes in a FASTA file with some nucleotide frequencies as outputs.
+regions and writes in a FASTA file with some nucleotide frequencies as outputs.  
+
+Second one extracts data from human genome.
 
 # 02_features_overlaps_casette.R
 The script uses a casette feature object created earlier (create_features_from_gff.R), Pooled Medip Peaks object created earlier 
 (01_dismiss_to_gff.R) and removes peaks not belonging to any class i.e. 'none'. We create a matrix with each column representing a 
 feature from the casette, the rows representing each gene from that feature, and count how many times they overlap the medip GRanges
 object. The summary is reported in a bar plot and a csv file.
+
+# 02_features_overlaps_casette_2.R
+Remake of the previous script and counting as described here https://www.evernote.com/shard/s288/nl/38698211/f1df55b2-238d-41b7-858b-bd86f5b1ea43
 
 # 03_bis_seq_vs_medip.R  
 Data published by frank lyko downloaded as bed format. It was imported as a csv file and converted to a GRanges object. The Sequence

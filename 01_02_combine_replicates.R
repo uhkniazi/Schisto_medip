@@ -68,7 +68,7 @@ md = list(desc='Pooled peaks common in each lifecycle stage with fisher p.values
 metadata(oGRLsamples.fisher.pooled) = md
 n = make.names(paste('oGRLsamples.fisher.pooled', date(), '.rds'))
 dir.create('Objects', showWarnings = F)
-save(oGRLsamples.fisher, file=paste('Objects/', n, sep=''))
+save(oGRLsamples.fisher.pooled, file=paste('Objects/', n, sep=''))
 
 ## create a gff for each sample
 for (i in 1:length(oGRLsamples.fisher.pooled)){
