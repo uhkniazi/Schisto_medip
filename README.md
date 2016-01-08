@@ -56,7 +56,12 @@ feature from the casette, the rows representing each gene from that feature, and
 object. The summary is reported in a bar plot and a csv file.
 
 # 02_features_overlaps_casette_2.R
-Remake of the previous script and counting as described here https://www.evernote.com/shard/s288/nl/38698211/f1df55b2-238d-41b7-858b-bd86f5b1ea43
+Remake of the previous script and counting as described here https://www.evernote.com/shard/s288/nl/38698211/f1df55b2-238d-41b7-858b-bd86f5b1ea43  
+The pooled medip peaks object is loaded from 01_02_combine_replicates.R script output. 
+
+# 03_01_unique_conserved_peaks.R
+The details for the document are here https://www.evernote.com/shard/s288/nl/38698211/a22f0866-6a0b-416d-9d19-b1bfb5e576df  
+The object to load from previous script is 01_02_combine_replicates.R and this object contains the common peaks with macs2 calculated q.values and joint fisher.p.values assigned to peaks common between 2 replicates of a lifecycle stage. Further analysis is performed using 5 steps, where a pool of peaks is first created using union, then unique and conserved peaks are calculated. See document in evernote for more details. The results are stored in two objects oGRconserved and oGRLunique to be used later.
 
 # 03_bis_seq_vs_medip.R  
 Data published by frank lyko downloaded as bed format. It was imported as a csv file and converted to a GRanges object. The Sequence

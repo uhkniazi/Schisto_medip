@@ -42,8 +42,11 @@ f_step2 = function(g1, g2){
 # get the metadata
 f_step3 = function(g1, g2){
   mc = as.data.frame(mcols(g1))
-  mc = mc[,c('fisher.p.value', 'neg.log10.fisher.p.value')]
-  return(mc)
+  mc1 = mc[,c('fisher.p.value', 'neg.log10.fisher.p.value')]
+  mc1$q.value.1 = 10^(-1 * mc$neg.log10.qval)
+  mc = as.data.frame(mcols(g2))
+  mc1$q.value.2 = 10^(-1 * mc$neg.log10.qval)
+  return(mc1)
 }
 
 ## somules
