@@ -63,6 +63,9 @@ The pooled medip peaks object is loaded from 01_02_combine_replicates.R script o
 The details for the document are here https://www.evernote.com/shard/s288/nl/38698211/a22f0866-6a0b-416d-9d19-b1bfb5e576df  
 The object to load from previous script is 01_02_combine_replicates.R and this object contains the common peaks with macs2 calculated q.values and joint fisher.p.values assigned to peaks common between 2 replicates of a lifecycle stage. Further analysis is performed using 5 steps, where a pool of peaks is first created using union, then unique and conserved peaks are calculated. See document in evernote for more details. The results are stored in two objects oGRconserved and oGRLunique to be used later.
 
+# 03_02_genes_ranking_over_conserved_peaks.R  
+The details for the analysis are https://www.evernote.com/shard/s288/nl/38698211/b9696f46-1eb3-4683-bac0-9d30f6fa94c9 and is very similar to the analysis performed in 2_features_overlaps_casette_2.R. The objects used for the analysis are the casette object and conserved peaks with fisher p.values created earlier.
+
 # 03_bis_seq_vs_medip.R  
 Data published by frank lyko downloaded as bed format. It was imported as a csv file and converted to a GRanges object. The Sequence
 version 5.2 was imported as a Biostrings object (DNAStringSet). The proportions are broken down into quantiles and plotted as a 
