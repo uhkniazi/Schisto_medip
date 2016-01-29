@@ -66,6 +66,9 @@ The object to load from previous script is 01_02_combine_replicates.R and this o
 # 03_02_genes_ranking_over_conserved_peaks.R  
 The details for the analysis are https://www.evernote.com/shard/s288/nl/38698211/b9696f46-1eb3-4683-bac0-9d30f6fa94c9 and is very similar to the analysis performed in 2_features_overlaps_casette_2.R. The objects used for the analysis are the casette object and conserved peaks with fisher p.values created earlier.
 
+# 03_03_genes_ranking_over_unique_peaks.R
+very similar to the previous script, however some small bugs were found in step_3 function, which are corrected. The script uses a hack, in order to avoid rewriting the previous script, and just loads a component of the GRangesList object that is required for the analysis by manually changing the name to s, f or m.
+
 # 03_bis_seq_vs_medip.R  
 Data published by frank lyko downloaded as bed format. It was imported as a csv file and converted to a GRanges object. The Sequence
 version 5.2 was imported as a Biostrings object (DNAStringSet). The proportions are broken down into quantiles and plotted as a 
