@@ -34,6 +34,8 @@ lCas$desc = NULL
 # step 4 - assign gene id to peak. 
 # step 5 - which feature the peak intersects with, T/F for each feature
 # step 6 - plot the posterior beta distribution for the binomial parameter theta
+# step 7 - calculate P(TRUE | Feature) i.e. rate of signal per 1000 features using gamma prior, with bootstrap
+# step 8 - calculate P(Feature | TRUE) i.e. distribution of the peaks over features using dirichlet prior
 
 ### functions used in script
 ## use a non-informative prior for the proprtion parameter theta
@@ -134,20 +136,42 @@ f_step6 = function(s5, ...){
 }
 
 f_step7 = function(g, p, ...){
-  us = overlapsAny(unlist(g$upstream), p)
-  ds = overlapsAny(unlist(g$downstream), p)
-  fst.exon = overlapsAny(unlist(g$fst.exon), p)
-  exons.ot = overlapsAny(unlist(g$exons.others), p)
-  introns = overlapsAny(unlist(g$introns), p)
+  boot.rate = function(qu, sub){
+    iBootnum = 100
+    mBoot = matrix(NA, iBootnum, 2)
+    colnames(mBoot) = c('False', 'True')
+    for (i in 1:iBootnum){
+      sam = sample(1:length(qu), size = 1000, replace = T)
+      mBoot[i,] = as.numeric(table(factor(overlapsAny(qu[sam], sub), levels = c('FALSE', 'TRUE'))))
+    }
+    return(colMeans(mBoot))
+  }
+## comment this section as using bootstrap to calculate rate
+#   us = overlapsAny(unlist(g$upstream), p)
+#   ds = overlapsAny(unlist(g$downstream), p)
+#   fst.exon = overlapsAny(unlist(g$fst.exon), p)
+#   exons.ot = overlapsAny(unlist(g$exons.others), p)
+#   introns = overlapsAny(unlist(g$introns), p)
+#   
+#   mDat = cbind(us=as.numeric(table(us)), fst.exon=as.numeric(table(fst.exon)), exons.ot=as.numeric(table(exons.ot)),
+#                introns=as.numeric(table(introns)), ds=as.numeric(table(ds)))
+#   
+#   rownames(mDat) = c('False', 'True')
+#   ivDat = colSums(mDat)
+#   # convert to rates
+#   ivProb = sweep(mDat, 2, ivDat, '/')['True',] * 1000
+  ## if not using bootstrap then comment this section and uncomment previous
+  us = boot.rate(unlist(g$upstream), p)
+  ds = boot.rate(unlist(g$downstream), p)
+  fst.exon = boot.rate(unlist(g$fst.exon), p)
+  exons.ot = boot.rate(unlist(g$exons.others), p)
+  introns = boot.rate(unlist(g$introns), p)
   
-  mDat = cbind(us=as.numeric(table(us)), fst.exon=as.numeric(table(fst.exon)), exons.ot=as.numeric(table(exons.ot)),
-               introns=as.numeric(table(introns)), ds=as.numeric(table(ds)))
-  
+  mDat = cbind(us=us, fst.exon=fst.exon, exons.ot=exons.ot,
+               introns=introns, ds=ds)
   rownames(mDat) = c('False', 'True')
-  
-  ivDat = colSums(mDat)
   # convert to rates
-  ivProb = sweep(mDat, 2, ivDat, '/')['True',] * 1000
+  ivProb = mDat['True',]
   
   #prior = rbeta(1000, ivDat['True'], ivDat['False'])
   mDat = sapply(ivProb, function(x) {
@@ -211,6 +235,8 @@ mSom.rate = f_step7(lCas, oGRLpooled$s, main='Somule Rate')
 mSom.naive = f_step8(lCas, oGRLpooled$s, main='Somule Naive')
 somule = s$peaks
 
+summary(round(mSom.rate, 2))
+summary(round(mSom.naive, 2))
 
 # female
 f = f_step1(lCas, oGRLpooled$f)
@@ -219,26 +245,44 @@ s = f_step4(lCas, s)
 s = f_step5(lCas, s)
 # plot the results
 mFem = f_step6(s, main='Female')
+mFem.rate = f_step7(lCas, oGRLpooled$f, main='Female Rate')
+mFem.naive = f_step8(lCas, oGRLpooled$f, main='Female Naive')
 female = s$peaks
+
+summary(round(mFem.rate, 2))
+summary(round(mFem.naive, 2))
 
 # male
 f = f_step1(lCas, oGRLpooled$m)
 s = f_step3(lCas, oGRLpooled$m[f])
 s = f_step4(lCas, s)
 s = f_step5(lCas, s)
-# plot the results
 mMale = f_step6(s, main='Male')
+mMale.rate = f_step7(lCas, oGRLpooled$m, main='Male Rate')
+mMale.naive = f_step8(lCas, oGRLpooled$m, main='Male Naive')
 male = s$peaks
+summary(round(mMale.rate, 2))
+summary(round(mMale.naive, 2))
 
 # plot them together
 # get the median to plot
+## set the appropriate variables on what we want to plot
+## just a quick hack to save from writing
+mSom = mSom.naive
+mFem = mFem.naive
+mMale = mMale.naive
+## OR
+mSom = mSom.rate
+mFem = mFem.rate
+mMale = mMale.rate
+
 s = apply(mSom, 2, median)
 f = apply(mFem, 2, median)
 m = apply(mMale, 2, median)
 
 mBar = rbind(s, f, m)
 col = grey.colors(nrow(mBar))
-l = barplot(mBar, beside=T, ylim=c(0,1), col=col, main='Probability of Peak over a Feature')
+l = barplot(mBar, beside=T, ylim=c(0,max(mMale)), col=col, main='Rate of medip signal per 1000 features')
 ## draw error bars
 f_barplot_errorbars = function(x.loc, y.loc, ...){
   segments(x.loc, y.loc[1], x.loc, y.loc[2], ...)
