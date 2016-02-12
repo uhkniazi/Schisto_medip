@@ -144,7 +144,7 @@ f_step7 = function(g, p, ...){
       sam = sample(1:length(qu), size = 1000, replace = T)
       mBoot[i,] = as.numeric(table(factor(overlapsAny(qu[sam], sub), levels = c('FALSE', 'TRUE'))))
     }
-    return(colMeans(mBoot))
+    return((mBoot))
   }
 ## comment this section as using bootstrap to calculate rate
 #   us = overlapsAny(unlist(g$upstream), p)
@@ -167,15 +167,16 @@ f_step7 = function(g, p, ...){
   exons.ot = boot.rate(unlist(g$exons.others), p)
   introns = boot.rate(unlist(g$introns), p)
   
-  mDat = cbind(us=us, fst.exon=fst.exon, exons.ot=exons.ot,
-               introns=introns, ds=ds)
-  rownames(mDat) = c('False', 'True')
+  mDat = cbind(us=us[,'True'], fst.exon=fst.exon[,'True'], exons.ot=exons.ot[,'True'],
+               introns=introns[,'True'], ds=ds[,'True'])
+  #rownames(mDat) = c('False', 'True')
   # convert to rates
-  ivProb = mDat['True',]
+  #ivProb = mDat['True',]
   
   #prior = rbeta(1000, ivDat['True'], ivDat['False'])
-  mDat = sapply(ivProb, function(x) {
+  mDat = apply(mDat, 2, function(x) {
     r = rgamma(1000, shape = jef.prior['alpha'] + sum(x) , jef.prior['beta']+ length(x))
+    #r = rgamma(1000, shape = jef.prior['alpha'] + (x*100) , jef.prior['beta']+ 100)
     return(r)
   })
   
@@ -224,6 +225,16 @@ f_step8 = function(g, p, ...){
   return(mDat)
 }
 
+## load the repeats object
+lFeatures = f_LoadObject(file.choose())
+# sanity check
+names(lFeatures)
+sapply(lFeatures, length)
+lFeatures$desc
+
+lCas.rep = lapply(lCas, function(x) setdiff(unlist(x), lFeatures$repeats))
+
+
 # somules
 f = f_step1(lCas, oGRLpooled$s)
 s = f_step3(lCas, oGRLpooled$s[f])
@@ -231,8 +242,8 @@ s = f_step4(lCas, s)
 s = f_step5(lCas, s)
 # plot the results
 mSom = f_step6(s, main='Somule')
-mSom.rate = f_step7(lCas, oGRLpooled$s, main='Somule Rate')
-mSom.naive = f_step8(lCas, oGRLpooled$s, main='Somule Naive')
+mSom.rate = f_step7(lCas.rep, oGRLpooled$s, main='Somule Rate')
+mSom.naive = f_step8(lCas.rep, oGRLpooled$s, main='Somule Naive')
 somule = s$peaks
 
 summary(round(mSom.rate, 2))
@@ -245,8 +256,8 @@ s = f_step4(lCas, s)
 s = f_step5(lCas, s)
 # plot the results
 mFem = f_step6(s, main='Female')
-mFem.rate = f_step7(lCas, oGRLpooled$f, main='Female Rate')
-mFem.naive = f_step8(lCas, oGRLpooled$f, main='Female Naive')
+mFem.rate = f_step7(lCas.rep, oGRLpooled$f, main='Female Rate')
+mFem.naive = f_step8(lCas.rep, oGRLpooled$f, main='Female Naive')
 female = s$peaks
 
 summary(round(mFem.rate, 2))
@@ -258,8 +269,8 @@ s = f_step3(lCas, oGRLpooled$m[f])
 s = f_step4(lCas, s)
 s = f_step5(lCas, s)
 mMale = f_step6(s, main='Male')
-mMale.rate = f_step7(lCas, oGRLpooled$m, main='Male Rate')
-mMale.naive = f_step8(lCas, oGRLpooled$m, main='Male Naive')
+mMale.rate = f_step7(lCas.rep, oGRLpooled$m, main='Male Rate')
+mMale.naive = f_step8(lCas.rep, oGRLpooled$m, main='Male Naive')
 male = s$peaks
 summary(round(mMale.rate, 2))
 summary(round(mMale.naive, 2))
@@ -282,7 +293,7 @@ m = apply(mMale, 2, median)
 
 mBar = rbind(s, f, m)
 col = grey.colors(nrow(mBar))
-l = barplot(mBar, beside=T, ylim=c(0,max(mMale)), col=col, main='Rate of medip signal per 1000 features')
+l = barplot(mBar, beside=T, ylim=c(0,max(mMale)), col=col, main='Distribution of peaks over features (Naive)')
 ## draw error bars
 f_barplot_errorbars = function(x.loc, y.loc, ...){
   segments(x.loc, y.loc[1], x.loc, y.loc[2], ...)
@@ -293,7 +304,7 @@ sapply(seq_along(1:ncol(mBar)), function(x) f_barplot_errorbars(l[1,x], quantile
 sapply(seq_along(1:ncol(mBar)), function(x) f_barplot_errorbars(l[2,x], quantile(mFem[,x], c(0.025, 0.975))))
 sapply(seq_along(1:ncol(mBar)), function(x) f_barplot_errorbars(l[3,x], quantile(mMale[,x], c(0.025, 0.975))))
 
-legend('topright', legend = c(rownames(mBar)), fill=col)
+legend('topleft', legend = c(rownames(mBar)), fill=col)
 
 
 oGRLsamples.fisher.pooled = GRangesList(somule, female, male)
