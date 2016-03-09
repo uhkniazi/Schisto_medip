@@ -59,6 +59,3 @@ get.pairwise.prob = function(x, fac, p.adjust.method='none'){
   return(out)
 }
 
-
-
-pairwise.table()

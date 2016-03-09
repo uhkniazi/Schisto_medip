@@ -60,7 +60,7 @@ Remake of the previous script and counting as described here https://www.evernot
 The pooled medip peaks object is loaded from 01_02_combine_replicates.R script output. 
 
 02_features_overlaps_casette_3.R
-Addition to the previous script, with counting rates of methylation signal over features. Details can be seen here  
+Addition to the previous script, with counting proportion of methylation signal over features. Details can be seen here  
 https://www.evernote.com/shard/s288/nl/38698211/79c55979-abc9-4b72-855f-a289e828c495
 
 
