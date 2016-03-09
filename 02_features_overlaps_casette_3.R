@@ -287,6 +287,11 @@ f_step7 = function(mDat, ...){
 #   return(mDat)
 # }
 
+f_getSummary = function(x){
+  return(c(mean=mean(x), std.dev=sd(x), median=median(x), ci.low=quantile(x, 0.025), ci.high=quantile(x, 0.975)))
+}
+
+
 ## load the repeats object
 lFeatures = f_LoadObject(file.choose())
 # sanity check
@@ -303,7 +308,14 @@ s = f_step3(lCas, oGRLpooled$s[f])
 s = f_step4(lCas, s)
 mat = f_step5(lCas, s)
 mDir.som = f_step6(mat, main='Somule - distribution of peaks over features')
+df = format(data.frame(t(apply(mDir.som, 2, f_getSummary))), digi=5)
+fn = paste(unlist(strsplit('Somule - distribution of peaks over features', split = ' ')), collapse = '')
+write.csv(df, file=paste('Temp/', fn, '.csv', sep=''))
+
 mBeta.som = f_step7(mat, main='Somule - Proportion of features with a peak')
+df = format(data.frame(t(apply(mBeta.som, 2, f_getSummary))), digi=5)
+fn = paste(unlist(strsplit('Somule - Proportion of features with a peak', split = ' ')), collapse = '')
+write.csv(df, file=paste('Temp/', fn, '.csv', sep=''))
 somule = s
 
 summary(signif(mDir.som, 2))
@@ -315,7 +327,15 @@ s = f_step3(lCas, oGRLpooled$f[f])
 s = f_step4(lCas, s)
 mat = f_step5(lCas, s)
 mDir.fem = f_step6(mat, main='Female - distribution of peaks over features')
+df = format(data.frame(t(apply(mDir.fem, 2, f_getSummary))), digi=5)
+fn = paste(unlist(strsplit('Female - distribution of peaks over features', split = ' ')), collapse = '')
+write.csv(df, file=paste('Temp/', fn, '.csv', sep=''))
+
 mBeta.fem = f_step7(mat, main='Female - Proportion of features with a peak')
+df = format(data.frame(t(apply(mBeta.fem, 2, f_getSummary))), digi=5)
+fn = paste(unlist(strsplit('Female - Proportion of features with a peak', split = ' ')), collapse = '')
+write.csv(df, file=paste('Temp/', fn, '.csv', sep=''))
+
 female = s
 
 summary(signif(mDir.fem, 2))
@@ -327,7 +347,15 @@ s = f_step3(lCas, oGRLpooled$m[f])
 s = f_step4(lCas, s)
 mat = f_step5(lCas, s)
 mDir.male = f_step6(mat, main='Male - distribution of peaks over features')
+df = format(data.frame(t(apply(mDir.male, 2, f_getSummary))), digi=5)
+fn = paste(unlist(strsplit('Male - distribution of peaks over features', split = ' ')), collapse = '')
+write.csv(df, file=paste('Temp/', fn, '.csv', sep=''))
+
 mBeta.male = f_step7(mat, main='Male - Proportion of features with a peak')
+df = format(data.frame(t(apply(mBeta.male, 2, f_getSummary))), digi=5)
+fn = paste(unlist(strsplit('Male - Proportion of features with a peak', split = ' ')), collapse = '')
+write.csv(df, file=paste('Temp/', fn, '.csv', sep=''))
+
 male = s
 
 summary(signif(mDir.male, 2))

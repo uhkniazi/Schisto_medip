@@ -37,3 +37,28 @@ get.prob = function(x, f){
   })
   return(pret)
 }
+
+### get pairwise comparisons for simulated p.values with multiple test correction
+get.pairwise.prob = function(x, fac, p.adjust.method='none'){
+  f = function(lev.1, lev.2){
+    sapply(seq_along(lev.1), function(i){
+      ivBaseline = x[which(fac == lev.1[i])]
+      x.l = x[which(fac == lev.2[i])]
+      x.l.m = mean(x.l)
+      return(min(c(sum(ivBaseline <= x.l.m)/length(ivBaseline), sum(ivBaseline >= x.l.m)/length(ivBaseline))) * 2)
+    })}
+  # levels for the factor
+  lev = levels(fac)
+  # perform pairwise comparison using outer product
+  out = outer(lev[-length(lev)], lev[-1L], f) 
+  dimnames(out) = list(paste(lev[-length(lev)], '*', sep=''), lev[-1L])
+  out = t(out)
+  ## adjust the p.value for multiple testing
+  out[upper.tri(out)] = NA
+  out[lower.tri(out, diag = TRUE)] = p.adjust(out[lower.tri(out, diag = TRUE)], method=p.adjust.method)
+  return(out)
+}
+
+
+
+pairwise.table()
