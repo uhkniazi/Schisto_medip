@@ -59,7 +59,7 @@ object. The summary is reported in a bar plot and a csv file.
 Remake of the previous script and counting as described here https://www.evernote.com/shard/s288/nl/38698211/f1df55b2-238d-41b7-858b-bd86f5b1ea43  
 The pooled medip peaks object is loaded from 01_02_combine_replicates.R script output. 
 
-02_features_overlaps_casette_3.R
+# 02_features_overlaps_casette_3.R
 Addition to the previous script, with counting proportion of methylation signal over features. Details can be seen here  
 https://www.evernote.com/shard/s288/nl/38698211/79c55979-abc9-4b72-855f-a289e828c495
 
