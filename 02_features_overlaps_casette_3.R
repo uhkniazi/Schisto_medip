@@ -23,7 +23,6 @@ lFeatures$desc
 sapply(oGRLpooled, length)
 metadata(oGRLpooled)
 
-
 lCas = lFeatures
 lCas$desc = NULL
 
@@ -297,8 +296,20 @@ lFeatures = f_LoadObject(file.choose())
 names(lFeatures)
 sapply(lFeatures, length)
 lFeatures$desc
+lFeatures$desc.2
+lReps = list(repeats=lFeatures$repeats, aber.miRNA=lFeatures$aber.miRNA, wormbase.rib=lFeatures$wormbase.rib,
+             wormbase.nonRib=lFeatures$wormbase.nonRib, mirBase=lFeatures$mirBase)
+
+as.data.frame(sapply(lReps, length))
 ### note: use this line if removing repeats
-lCas = lapply(lCas, function(x) setdiff(unlist(x), lFeatures$repeats))
+### this will cause a bug in the GeneID (see function f_step4) but that is an artifact
+### carried over due to ad hoc addition of repeat sequences removal step and can be ignored.
+### this does not happen if we do not remove repeats, and serves the original purpose of the
+### function i.e. mapping peaks to particular gene ids
+oGRreps = GRangesList(lReps)
+oGRreps = unlist(oGRreps)
+oGRreps = reduce(oGRreps)
+lCas = lapply(lCas, function(x) setdiff(unlist(x), oGRreps))
 sapply(lCas, length)
 
 # somules
