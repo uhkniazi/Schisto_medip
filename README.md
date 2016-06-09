@@ -128,6 +128,9 @@ positions to create a background distribution. The dinucleotide frequencies are 
 proportion of CA, CC, CG and CT is used to sample from a multinomial distribution 1000 times - this is used in the binomial test 
 to compare observed frequency with expected frequency.
 
+# 07_ncSeqs_overlaps_intragenic.R
+details are here https://www.evernote.com/shard/s288/nl/38698211/70039583-0d4a-4dbc-8d9b-b84e7484781a  
+find overlaps of non coding features with genomic features that both have a medip signal  
 
 
 
