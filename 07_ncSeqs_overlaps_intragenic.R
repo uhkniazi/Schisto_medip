@@ -118,11 +118,12 @@ f_getSummary = function(x){
 ## repeat the process for each lifecycle stage
 # somules
 lOverlap = lapply(oGRLCas, f_step1.2, oGRLpooled$s)
+lReps.2 = lapply(lReps, f_step1.2, oGRLpooled$s)
 cvNames = names(lOverlap)
 cvSample = 'Somule'
 temp = sapply(seq_along(cvNames), function(x){
   cTitle = cvNames[x]
-  mCont = f_step3(lReps, lOverlap[[cTitle]])
+  mCont = f_step3(lReps.2, lOverlap[[cTitle]])
   f_step4(mCont, main=paste(cvSample, '- distribution of peaks over ncSeqs overlapping with', cTitle))
   f_step5(mCont, main=paste(cvSample, '- proportion of ncSeqs with peak and overlapping with', cTitle))
   print(cTitle)
@@ -131,11 +132,12 @@ temp = sapply(seq_along(cvNames), function(x){
 
 
 lOverlap = lapply(oGRLCas, f_step1.2, oGRLpooled$f)
+lReps.2 = lapply(lReps, f_step1.2, oGRLpooled$f)
 cvNames = names(lOverlap)
 cvSample = 'Female'
 temp = sapply(seq_along(cvNames), function(x){
   cTitle = cvNames[x]
-  mCont = f_step3(lReps, lOverlap[[cTitle]])
+  mCont = f_step3(lReps.2, lOverlap[[cTitle]])
   f_step4(mCont, main=paste(cvSample, '- distribution of peaks over ncSeqs overlapping with', cTitle))
   f_step5(mCont, main=paste(cvSample, '- proportion of ncSeqs with peak and overlapping with', cTitle))
   print(cTitle)
@@ -144,11 +146,12 @@ temp = sapply(seq_along(cvNames), function(x){
 
 
 lOverlap = lapply(oGRLCas, f_step1.2, oGRLpooled$m)
+lReps.2 = lapply(lReps, f_step1.2, oGRLpooled$m)
 cvNames = names(lOverlap)
 cvSample = 'Male'
 temp = sapply(seq_along(cvNames), function(x){
   cTitle = cvNames[x]
-  mCont = f_step3(lReps, lOverlap[[cTitle]])
+  mCont = f_step3(lReps.2, lOverlap[[cTitle]])
   f_step4(mCont, main=paste(cvSample, '- distribution of peaks over ncSeqs overlapping with', cTitle))
   f_step5(mCont, main=paste(cvSample, '- proportion of ncSeqs with peak and overlapping with', cTitle))
   print(cTitle)
