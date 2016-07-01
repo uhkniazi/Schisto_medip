@@ -44,6 +44,8 @@ object to be used by later scripts.
 
 The third part of the script imports the lFeatures list created in the earlier parts, and adds on a couple of extra non-coding gff features as GRanges objects.
 
+The fourth part of the script creates intragenic and intergenic features.
+
 
 # Fanny_downstream_sequences.R
 # Fanny_downstream_sequences_human.R

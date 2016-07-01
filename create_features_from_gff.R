@@ -230,3 +230,50 @@ n = paste('Objects/lFeatures_reps.', make.names(date()), sep='')
 dir.create('Objects', showWarnings = F)
 save(lFeatures, file=n)
 
+#################################################################################################
+####### addition to create intergenic regions
+# > w
+# Schisto_mansoni.Chr_1 Schisto_mansoni.Chr_1.65476681 Schisto_mansoni.Chr_ZW Schisto_mansoni.Chr_ZW.59508269 
+# 65476681                                               59508269 
+# Schisto_mansoni.Chr_2 Schisto_mansoni.Chr_2.34464480   Schisto_mansoni.Chr_4 Schisto_mansoni.Chr_4.32115376 
+# 34464480                                               32115376 
+# Schisto_mansoni.Chr_3 Schisto_mansoni.Chr_3.27965507   Schisto_mansoni.Chr_6 Schisto_mansoni.Chr_6.20041393 
+# 27965507                                               20041393 
+# Schisto_mansoni.Chr_7 Schisto_mansoni.Chr_7.9743550    Schisto_mansoni.Chr_5 Schisto_mansoni.Chr_5.9386253 
+# 9743550                                                9386253 
+
+iSeqLens = c(59508269, 65476681, 34464480, 32115376, 27965507, 20041393, 9743550, 9386253)
+names(iSeqLens) = gcvChromosomes
+
+## create GRanges objects for these
+gr = GRanges(gcvChromosomes, ranges = IRanges(1, iSeqLens))
+oGRinter = gr
+strand(oGRinter) = '+'
+strand(gr) = '-'
+oGRinter = append(oGRinter, gr)
+
+## create intragenic from annotated features
+oGRintra = c(lFeatures$gene, lFeatures$prom, lFeatures$downstream)
+length(oGRintra)
+oGRintra = reduce(oGRintra)
+length(oGRintra)
+
+## set difference to create non-overlapping intergenic regions
+oGRinter = setdiff(oGRinter, oGRintra)
+length(oGRinter)
+
+## add these to the feature object
+lFeatures$intra = oGRintra
+lFeatures$inter = oGRinter
+
+d = paste('compressed features i.e. binned, for schisto v5.2 UPDATED with intergenic features on ', date())
+lFeatures$desc.3 = d
+
+n = paste('Objects/lFeatures_reps_inter.', make.names(date()), sep='')
+dir.create('Objects', showWarnings = F)
+save(lFeatures, file=n)
+
+
+
+
+
