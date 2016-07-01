@@ -137,5 +137,7 @@ to compare observed frequency with expected frequency.
 details are here https://www.evernote.com/shard/s288/nl/38698211/70039583-0d4a-4dbc-8d9b-b84e7484781a  
 find overlaps of non coding features with genomic features that both have a medip signal  
 
+# 07_features_overlap_medip.R
+a generic script, to create plots for genomic features (query) - created earlier and saved as lFeatures list - and medip signal (subject), use a medip signal object of choice for the plots.
 
 
