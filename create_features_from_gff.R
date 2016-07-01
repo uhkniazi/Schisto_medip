@@ -174,29 +174,40 @@ save(lFeatures, file=n)
 
 
 ################## addition in May 2016, for additional features
+################## modified July 2016, with new non coding gff features
 ##### no part of script executed before this apart from the header import and setting global variables
 
 lFeatures = f_LoadObject(file.choose())
 
 # load one gff at a time
-gff = file.choose()
+#gff = file.choose()
+gff = "/home/uniazi/Data/R/Schisto_medip/Data_external/Gff/mirbase-mirRNA.gff3"
 # load repeats file
 gr.rep = import(gff)
 # as the chromosome W is named W here and ZW in other places, rename W here to ZW
 # simpler to create a new ranges object
 mc = mcols(gr.rep)
 sn = as.character(seqnames(gr.rep))
-f = grepl('^Schisto_mansoni.Chr_W$', sn, perl=T)
-sn[f] = 'Schisto_mansoni.Chr_ZW'
+# make correct names i.e. change from short to long
+pat = c(paste0('Chr_', 2:7), 'Chr_W')
+rep = c(paste0('Schisto_mansoni.Chr_', 2:7), 'Schisto_mansoni.Chr_ZW')
+for (x in seq_along(pat)) {
+  f = sn %in% pat[x]
+  sn[f] = rep[x]
+}
+# 
+# f = grepl('^Schisto_mansoni.Chr_W$', sn, perl=T)
+# sn[f] = 'Schisto_mansoni.Chr_ZW'
 # create a new object
 oGRrepeats = GRanges(sn, ranges(gr.rep), strand = strand(gr.rep))
 mcols(oGRrepeats) = mc
 oGRrepeats = oGRrepeats[seqnames(oGRrepeats) %in% gcvChromosomes]
 oGRrepeats = reduce(oGRrepeats)
-lFeatures$aber.miRNA = oGRrepeats
+lFeatures$mirbase = oGRrepeats
 
 ## second gff
-gff = file.choose()
+#gff = file.choose()
+gff = "/home/uniazi/Data/R/Schisto_medip/Data_external/Gff/wormbase-tRNA.gff"
 # load repeats file
 gr.rep = import(gff)
 # as the chromosome W is named W here and ZW in other places, rename W here to ZW
@@ -210,41 +221,7 @@ oGRrepeats = GRanges(sn, ranges(gr.rep), strand = strand(gr.rep))
 mcols(oGRrepeats) = mc
 oGRrepeats = oGRrepeats[seqnames(oGRrepeats) %in% gcvChromosomes]
 oGRrepeats = reduce(oGRrepeats)
-lFeatures$wormbase.rib = oGRrepeats
-
-## third gff
-gff = file.choose()
-# load repeats file
-gr.rep = import(gff)
-# as the chromosome W is named W here and ZW in other places, rename W here to ZW
-# simpler to create a new ranges object
-mc = mcols(gr.rep)
-sn = as.character(seqnames(gr.rep))
-f = grepl('^Schisto_mansoni.Chr_W$', sn, perl=T)
-sn[f] = 'Schisto_mansoni.Chr_ZW'
-# create a new object
-oGRrepeats = GRanges(sn, ranges(gr.rep), strand = strand(gr.rep))
-mcols(oGRrepeats) = mc
-oGRrepeats = oGRrepeats[seqnames(oGRrepeats) %in% gcvChromosomes]
-oGRrepeats = reduce(oGRrepeats)
-lFeatures$wormbase.nonRib = oGRrepeats
-
-## fourth gff
-gff = file.choose()
-# load repeats file
-gr.rep = import(gff)
-# as the chromosome W is named W here and ZW in other places, rename W here to ZW
-# simpler to create a new ranges object
-mc = mcols(gr.rep)
-sn = as.character(seqnames(gr.rep))
-f = grepl('^Schisto_mansoni.Chr_W$', sn, perl=T)
-sn[f] = 'Schisto_mansoni.Chr_ZW'
-# create a new object
-oGRrepeats = GRanges(sn, ranges(gr.rep), strand = strand(gr.rep))
-mcols(oGRrepeats) = mc
-oGRrepeats = oGRrepeats[seqnames(oGRrepeats) %in% gcvChromosomes]
-oGRrepeats = reduce(oGRrepeats)
-lFeatures$mirBase = oGRrepeats
+lFeatures$wormbase = oGRrepeats
 
 d = paste('compressed features i.e. binned, for schisto v5.2 UPDATED on', date())
 lFeatures$desc.2 = d

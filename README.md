@@ -42,6 +42,9 @@ The second part of the script uses the gff imported earlier, to create reduced e
 the repeats file RepBasePerpignanSma52.gff. We only use the data from the full chromosomes, and the data is saved as a lFeatures 
 object to be used by later scripts.
 
+The third part of the script imports the lFeatures list created in the earlier parts, and adds on a couple of extra non-coding gff features as GRanges objects.
+
+
 # Fanny_downstream_sequences.R
 # Fanny_downstream_sequences_human.R
 Very similar to previous script, but extracts only the genes and converts them to downstream regions. Extracts sequences for those 
