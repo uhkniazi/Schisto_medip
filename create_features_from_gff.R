@@ -274,6 +274,26 @@ dir.create('Objects', showWarnings = F)
 save(lFeatures, file=n)
 
 
-
-
+#################################################################################
+## break repeats into sub-categories
+## execute the top of the script  first, i.e. header file and global variables only
+gff = file.choose()
+gr.rep = import(gff)
+mc = mcols(gr.rep)
+sn = as.character(seqnames(gr.rep))
+f = grepl('^Schisto_mansoni.Chr_W$', sn, perl=T)
+table(f)
+sn[f] = 'Schisto_mansoni.Chr_ZW'
+# create a new object
+oGRrepeats = GRanges(sn, ranges(gr.rep), strand = strand(gr.rep))
+mcols(oGRrepeats) = mc
+oGRrepeats = oGRrepeats[seqnames(oGRrepeats) %in% gcvChromosomes]
+dat = oGRrepeats$Target
+fCategories = gsub('^Motif:(\\S+)".+', replacement = '\\1', x=dat, perl=T)
+length(unique(fCategories))
+temp = data.frame(table(fCategories))
+summary(temp$Freq)
+temp = temp[order(temp$Freq, decreasing = T),]
+oGRrepeats$fCategories = fCategories
+save(oGRrepeats, file='Objects/oGRrepeats.categories.rds')
 
