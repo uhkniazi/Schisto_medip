@@ -27,8 +27,11 @@ lCas = list(gene=reduce(lFeatures$gene), exon=reduce(lFeatures$exon), intron=red
 
 lGenomic = list(intra=reduce(lFeatures$intra), inter=reduce(lFeatures$inter))
 
+lncReps = list(mirbase=reduce(lFeatures$mirbase), wormbase=reduce(lFeatures$wormbase))
+
 ## choose the appropriate feature for overlaps
 oGRLCas = GRangesList(lGenomic)
+oGRLCas = GRangesList(lncReps)
 sapply(oGRLCas, length)
 names(oGRLCas)
 
