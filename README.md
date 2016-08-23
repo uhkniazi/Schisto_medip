@@ -1,6 +1,23 @@
 # Schisto_medip
 MEDIP-Seq data analysis from Schistosoma mansoni S, M and F lifecycle stages
 
+---
+# Internal functions
+## get.prob
+## get.pairwise.prob
+**ARGS** Require a vector with simulated values from the distribution of choice, with each group concatenated one after the other; and a factor vector indicating the positions for the data.  
+
+```R
+## ivFirst, ivSecond and ivThird are integer vectors
+## created by random monte carlo sampling from a distribution of choice
+## in this example each vector is a sample of 1000 random numbers
+df = data.frame(cbind(ivFirst, ivSecond, ivThird))
+st = stack(df)
+return(get.pairwise.prob(st$values, st$ind, p.adjust.method = 'bonf'))
+```
+---
+  
+  
 # 00_header.R
 header file to set libraries, source files and set global variables and paths
 
@@ -46,6 +63,7 @@ The third part of the script imports the lFeatures list created in the earlier p
 
 The fourth part of the script creates intragenic and intergenic features.
 
+**Fifth** part of this script creates an object from the repeats gff file to assign categories to the repeats.
 
 # Fanny_downstream_sequences.R
 # Fanny_downstream_sequences_human.R
@@ -139,5 +157,9 @@ find overlaps of non coding features with genomic features that both have a medi
 
 # 07_features_overlap_medip.R
 a generic script, to create plots for genomic features (query) - created earlier and saved as lFeatures list - and medip signal (subject), use a medip signal object of choice for the plots.
+
+# 08_repeat_categories_overlap_medip.R
+### date 23/08/2016
+Details of the analysis are described in the evernote document [here](https://www.evernote.com/shard/s288/nl/38698211/37a3b421-cd36-496a-af84-6ae5cd934b9c?title=Grunau's%20repeats%20and%20overlap%20of%20medip%20signal). The data files information is obtained from the MySQL database Projects.MetaFile where idData=3. The pooled peaks object and repeats object with categories for repeats are used for the analysis. Using the *get.pairwise.prob* function is used to calculate p-values for the simulated parameters. Categories with significant p-values are listed and plotted.  
 
 
