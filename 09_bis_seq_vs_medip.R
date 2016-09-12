@@ -114,8 +114,8 @@ for( i in 1:nBoot){
   # take sample of 1000 positions
   s = sample(1:length(seq.bs), size = 1000, replace = F)
   s = seq.bs[s]
-  m = dinucleotideFrequency(s, as.prob=F)[,c('CA', 'CC', 'CG', 'CT')]
-  mFreq.bs[i,] = colSums(m)
+  m = dinucleotideFrequency(s, as.prob=T)[,c('CA', 'CC', 'CG', 'CT')]
+  mFreq.bs[i,] = colMeans(m)
 }
 colnames(mFreq.bs) = c('CA', 'CC', 'CG', 'CT')
 
@@ -147,8 +147,8 @@ for( i in 1:nBoot){
   # take sample of 1000 positions
   s = sample(1:length(seq.med), size = 1000, replace = F)
   s = seq.med[s]
-  m = dinucleotideFrequency(s, as.prob=F)[,c('CA', 'CC', 'CG', 'CT')]
-  mFreq.med[i,] = colSums(m)
+  m = dinucleotideFrequency(s, as.prob=T)[,c('CA', 'CC', 'CG', 'CT')]
+  mFreq.med[i,] = colMeans(m)
 }
 colnames(mFreq.med) = c('CA', 'CC', 'CG', 'CT')
 
@@ -167,28 +167,38 @@ for( i in 1:nBoot){
   # take sample of 1000 positions
   s = sample(1:length(seq.ran), size = 1000, replace = F)
   s = seq.ran[s]
-  m = dinucleotideFrequency(s, as.prob=F)[,c('CA', 'CC', 'CG', 'CT')]
-  mFreq.ran[i,] = colSums(m)
+  m = dinucleotideFrequency(s, as.prob=T)[,c('CA', 'CC', 'CG', 'CT')]
+  mFreq.ran[i,] = colMeans(m)
 }
 colnames(mFreq.ran) = c('CA', 'CC', 'CG', 'CT')
 
+# Using the formula for alpha and beta for the beta distribution (see Gelman 2008) 
+# the mean and the variance are used to solve for alpha and beta. This would normally
+# be used if we have a vector of proportions (say an exchangable distribution) and we
+# want to calculate a beta distribution parameters for that.
+getalphabeta = function(m, v){
+  al.be = (m * (1-m) / v) - 1
+  al = al.be * m
+  be = al.be * (1-m)
+  return(list(alpha=al, beta=be))
+}
 # get averages for each frequency
-iFreq.bs = colMeans(mFreq.bs)
-iFreq.med = colMeans(mFreq.med)
-iFreq.ran = colMeans(mFreq.ran)
+lFreq.bs = apply(mFreq.bs, 2, function(x) getalphabeta(mean(x), var(x)))
+lFreq.med = apply(mFreq.med, 2, function(x) getalphabeta(mean(x), var(x)))
+lFreq.ran = apply(mFreq.ran, 2, function(x) getalphabeta(mean(x), var(x)))
 
-# scale these to the same level
-iFreq.bs = round(iFreq.bs/sum(iFreq.bs) * 1000, 0)
-iFreq.med = round(iFreq.med/sum(iFreq.med) * 1000, 0)
-iFreq.ran = round(iFreq.ran/sum(iFreq.ran) * 1000, 0)
+# # scale these to the same level
+# iFreq.bs = round(iFreq.bs * 1000, 0)
+# iFreq.med = round(iFreq.med * 1000, 0)
+# iFreq.ran = round(iFreq.ran * 1000, 0)
 
 ## plotting functions
 if(!require(LearnBayes)) stop('R Package LearnBayes required')
 # get posterior theta from posterior dirichlet
-getPosterior = function(alpha, n=1000){
-  p = rdirichlet(n, alpha)
-  colnames(p) = names(alpha)
-  #m = colMeans(p)
+getPosterior = function(param, n=1000){
+  alpha = param$alpha
+  beta = param$beta
+  p = rbeta(n, alpha, beta)
   return(p)
 }
 
@@ -213,14 +223,14 @@ plot.bar = function(mDat, title='Abundance', ...){
   par(p.old)
 }
 
-plot.bar(getPosterior(iFreq.bs+0.5), title = 'BS')
-plot.bar(getPosterior(iFreq.med+0.5), title = 'Med')
-plot.bar(getPosterior(iFreq.ran+0.5), title = 'Ran')
+plot.bar(sapply(lFreq.bs, getPosterior), title = 'BS')
+plot.bar(sapply(lFreq.med, getPosterior), title = 'Med')
+plot.bar(sapply(lFreq.ran, getPosterior), title = 'Ran')
 
 par(mfrow=c(1,1))
 
-mDat.med = getPosterior(iFreq.med+0.5)
-mDat.ran = getPosterior(iFreq.ran+0.5)
+mDat.med = sapply(lFreq.med, getPosterior)
+mDat.ran = sapply(lFreq.ran, getPosterior)
 mPlot = lapply(1:4, function(x){
   cbind(mDat.med[,x], mDat.ran[,x])
 })
@@ -234,335 +244,31 @@ colnames(mPlot) = cn
 plot.bar(mPlot, 'med vs background', col=grey.colors(2))
 legend('topleft', legend = c('MeD', 'BG'), fill=grey.colors(2))
 
-# seq.med.plus = f_DNAStringSet_GRangesSequenceFromDNAStringSet(seq, oGRpooled.sub[strand(oGRpooled.sub) != '-'])
-# seq.med.minus = f_DNAStringSet_GRangesSequenceFromDNAStringSet(seq, oGRpooled.sub[strand(oGRpooled.sub) == '-'])
-# seq.med.minus = reverseComplement(seq.med.minus)
-# seq.med = c(seq.med.plus, seq.med.minus)
-# mNucFreq.med = dinucleotideFrequency(seq.med, as.prob=F)[,c('CA', 'CC', 'CG', 'CT')]
-# ivNucFreq.med = colSums(mNucFreq.med)
-ivNucFreq.med = colSums(m)
-names(ivNucFreq.med) = c('CA', 'CC', 'CG', 'CT')
-rm(list = c('m', 'seq.med.plus', 'seq.med.minus', 'seq.med', 'mNucFreq.med', 'oGRpooled.sub'))
+# scale each value by CA
+mDat.med = sapply(lFreq.med, getPosterior)
+mDat.ran = sapply(lFreq.ran, getPosterior)
+mDat.bs = sapply(lFreq.bs, getPosterior)
 
-#################################################################
-## make plots of both frequencies
-# calculate confidence intervals/errors by simulating the data
-ivProb.medip.nuc = ivNucFreq.med / sum(ivNucFreq.med)
-# simulate data as a sample from a multinomial distribution
-# P(y | Theta)
-mSim.medip.nuc = t(rmultinom(n = 1000, size = 1000, prob = ivProb.medip.nuc))
-# convert to probability scale for plotting
-mSim.medip.nuc = mSim.medip.nuc / rowSums(mSim.medip.nuc)
+mDat.med = sweep(mDat.med, 1, mDat.med[,'CA'], '/')
+mDat.ran = sweep(mDat.ran, 1, mDat.ran[,'CA'], '/')
+mDat.bs = sweep(mDat.bs, 1, mDat.bs[,'CA'], '/')
 
-## plot for BS-Seq
-# calculate confidence intervals/errors by simulating the data
-ivProb.bis.nuc = ivNucFreq.bis / sum(ivNucFreq.bis)
-# simulate data as a sample from a multinomial distribution
-# P(y | Theta)
-mSim.bis.nuc = t(rmultinom(n = 1000, size = 1000, prob = ivProb.bis.nuc))
-# convert to probability scale for plotting
-mSim.bis.nuc = mSim.bis.nuc / rowSums(mSim.bis.nuc)
+plot.bar(mDat.med, title = 'Scaled by CA - MedIP')
+plot.bar(mDat.ran, title = 'Scaled by CA - BG')
+plot.bar(mDat.bs, title = 'Scaled by CA - BS')
 
-### plot the bs-seq data separately
-l = barplot(ivProb.bis.nuc, beside=T, ylim=c(0, 0.5), col='pink', main='Dinucleotide Frequencies BS-Seq', 
-            sub='Proportion >= 0.1', ylab='fraction')
-## make error bars
-m = apply(mSim.bis.nuc, 2, function(x) quantile(x, c(0.025, 0.975)))
-segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
-segments(l-0.1, y0 = m[1,], l+0.1, y1 = m[1,], lwd=2)
-segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
+mPlot = lapply(1:4, function(x){
+  cbind(mDat.med[,x], mDat.ran[,x], mDat.bs[,x])
+})
+
+mPlot = do.call(cbind, mPlot)
+
+cn = sapply(1:4, function(x) c(colnames(mDat.med)[x], colnames(mDat.ran)[x], colnames(mDat.bs)[x]))
+cn = as.vector(cn)
+colnames(mPlot) = cn
+
+plot.bar(mPlot, 'med vs background', col=grey.colors(3))
+legend('topleft', legend = c('MeD', 'BG', 'BS'), fill=grey.colors(3))
 
 
-### plot the 2 data together
-c = rainbow(2)
-mBar = rbind(ivProb.medip.nuc, ivProb.bis.nuc)
-rownames(mBar) = c('MeDIP', 'BS-Seq')
-l2 = barplot(mBar, beside=T, ylim=c(0, 0.5), col=c, main='Dinucleotide Frequencies', ylab='fraction')
-legend('topright', legend = rownames(mBar), fill = c)
-l = l2[1,]
-## make error bars
-m = apply(mSim.medip.nuc, 2, function(x) quantile(x, c(0.025, 0.975)))
-segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
-segments(l-0.1, y0 = m[1,], l+0.1, y1 = m[1,], lwd=2)
-segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
-
-l = l2[2,]
-## make error bars
-m = apply(mSim.bis.nuc, 2, function(x) quantile(x, c(0.025, 0.975)))
-segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
-segments(l-0.1, y0 = m[1,], l+0.1, y1 = m[1,], lwd=2)
-segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
-
-#####################################################################
-#### take a random sample from chromosome 1 and plot together
-s = seq[gcvChromosomes[2]]
-r = f_bin_vector(1, end = 65476681, bins = 130953)
-i = sample(1:nrow(r), size = 20000, replace = F)
-r = r[i,]
-# ranges of 500 size
-ran = GRanges(gcvChromosomes[2], IRanges(r$start, r$end))
-s = f_DNAStringSet_GRangesSequenceFromDNAStringSet(seq, ran)
-ran.f = dinucleotideFrequency(s, as.prob=F)[,c('CA', 'CC', 'CG', 'CT')]
-ran.f = colSums(ran.f)
-
-ivProb.ran.nuc = ran.f / sum(ran.f)
-# simulate data as a sample from a multinomial distribution
-# P(y | Theta)
-mSim.ran.nuc = t(rmultinom(n = 1000, size = 1000, prob = ivProb.ran.nuc))
-# convert to probability scale for plotting
-mSim.ran.nuc = mSim.ran.nuc / rowSums(mSim.ran.nuc)
-
-## plot the 3 sets together
-c = rainbow(3)
-mBar = rbind(ivProb.medip.nuc, ivProb.bis.nuc, ivProb.ran.nuc)
-rownames(mBar) = c('MeDIP', 'BS-Seq', 'Background')
-l2 = barplot(mBar, beside=T, ylim=c(0, 0.5), col=c, main='Dinucleotide Frequencies', ylab='fraction')
-legend('topright', legend = rownames(mBar), fill = c)
-l = l2[1,]
-## make error bars
-m = apply(mSim.medip.nuc, 2, function(x) quantile(x, c(0.025, 0.975)))
-segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
-segments(l-0.1, y0 = m[1,], l+0.1, y1 = m[1,], lwd=2)
-segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
-
-l = l2[2,]
-## make error bars
-m = apply(mSim.bis.nuc, 2, function(x) quantile(x, c(0.025, 0.975)))
-segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
-segments(l-0.1, y0 = m[1,], l+0.1, y1 = m[1,], lwd=2)
-segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
-
-l = l2[3,]
-## make error bars
-m = apply(mSim.ran.nuc, 2, function(x) quantile(x, c(0.025, 0.975)))
-segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
-segments(l-0.1, y0 = m[1,], l+0.1, y1 = m[1,], lwd=2)
-segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
-
-
-######################################################################
-### breakdown of repeats into subclasses
-#######################
-## function to simulate
-f_sim_multi = function(prob){
-  m = t(rmultinom(n = 1000, size = 1000, prob = prob))
-  # convert to probability scale for plotting
-  return(m/rowSums(m))
-}
-
-f_sim_ci = function(prob){
-  m = f_sim_multi(prob)
-  return(apply(m, 2, function(x) quantile(x, c(0.025, 0.975))))
-}
-#######################
-# load the repeats object 
-oGRrep = f_LoadObject(file.choose())
-
-# rename all the W chromosome to ZW
-r1 = oGRrep[seqnames(oGRrep) %in% gcvChromosomes]
-r2 = oGRrep[seqnames(oGRrep) == 'Schisto_mansoni.Chr_W']
-r1 = GRanges(as.character(seqnames(r1)), IRanges(start(r1), end(r1)), strand(r1), DataFrame(mcols(r1)))
-r2 = GRanges('Schisto_mansoni.Chr_ZW', IRanges(start(r2), end(r2)), strand(r2), DataFrame(mcols(r2)))
-oGRrep = c(r1, r2)
-
-#oGRrep = oGRrep[seqnames(oGRrep) %in% gcvChromosomes]
-
-f = oGRrep$mcols.class
-oGRLrep = split(oGRrep, f)
-# count overlaps
-mMed = sapply(oGRLrep, function(x) factor(overlapsAny(x, oGRpooled),levels = c('TRUE', 'FALSE')))
-mMed = sapply(mMed, table)
-
-mBis = sapply(oGRLrep, function(x) factor(overlapsAny(x, oGR.bis),levels = c('TRUE', 'FALSE')))
-mBis = sapply(mBis, table)
-
-mRan = sapply(oGRLrep, function(x) factor(overlapsAny(x, ran),levels = c('TRUE', 'FALSE')))
-mRan = sapply(mRan, table)
-
-## plot the results
-ivMed = mMed['TRUE',] / rowSums(mMed)['TRUE']
-ivBis = mBis['TRUE',] / rowSums(mBis)['TRUE']
-ivRan = mRan['TRUE',] / rowSums(mRan)['TRUE']
-
-mBar = rbind(ivMed, ivBis, ivRan)
-rownames(mBar) = c('MeDIP', 'BS-Seq', 'Background')
-c = rainbow(3)
-
-l2 = barplot(mBar, beside=T, las=2, main='Distribution over Repeats', col=c, ylim=c(0, 0.6), sub='BS-Seq cutoff >= 0.9',
-             ylab='fraction')
-legend('topright', legend = rownames(mBar), fill=c)
-
-# draw error bars
-for (i in 1:nrow(mBar)){
-  l = l2[i,]
-  ## make error bars
-  m = f_sim_ci(mBar[i,])
-  segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
-  segments(l-0.1, y0 = m[1,], l+0.1, y1 = m[1,], lwd=2)
-  segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
-}
-
-# ######################################################################
-# ## Repeat this analysis for only peaks in group 10
-# oGR.bis.bk = oGR.bis
-# oGR.bis = oGR.bis[oGR.bis$groups == 10]
-# oGR.bis.w = resize(oGR.bis, 2, fix = 'start')
-# seq.bs.plus = f_DNAStringSet_GRangesSequenceFromDNAStringSet(seq, oGR.bis.w[strand(oGR.bis.w) == '+'])
-# seq.bs.minus = f_DNAStringSet_GRangesSequenceFromDNAStringSet(seq, oGR.bis.w[strand(oGR.bis.w) == '-'])
-# # sequence on minus strand reverse complimented
-# seq.bs.minus = reverseComplement(seq.bs.minus)
-# seq.bs = c(seq.bs.plus, seq.bs.minus)
-# mNucFreq.bis = dinucleotideFrequency(seq.bs, as.prob=F)[,c('CA', 'CC', 'CG', 'CT')]
-# ivNucFreq.bis = colSums(mNucFreq.bis)
-# 
-# ## calculate for medip data
-# ## choose only peaks with a width upto the 3rd quantile
-# oGRpooled.bk = oGRpooled
-# oGRpooled = oGRpooled[overlapsAny(oGRpooled, oGR.bis)]
-# c = quantile(width(oGRpooled), prob=0.75)
-# f = which(width(oGRpooled) <= c)
-# oGRpooled.sub = oGRpooled[f]
-# # get the sequence for plus, * and minus sides
-# seq.med.plus = f_DNAStringSet_GRangesSequenceFromDNAStringSet(seq, oGRpooled.sub[strand(oGRpooled.sub) != '-'])
-# seq.med.minus = f_DNAStringSet_GRangesSequenceFromDNAStringSet(seq, oGRpooled.sub[strand(oGRpooled.sub) == '-'])
-# seq.med.minus = reverseComplement(seq.med.minus)
-# seq.med = c(seq.med.plus, seq.med.minus)
-# mNucFreq.med = dinucleotideFrequency(seq.med, as.prob=F)[,c('CA', 'CC', 'CG', 'CT')]
-# ivNucFreq.med = colSums(mNucFreq.med)
-# 
-# #################################################################
-# ## make plots of both frequencies
-# # calculate confidence intervals/errors by simulating the data
-# ivProb.medip.nuc = ivNucFreq.med / sum(ivNucFreq.med)
-# # simulate data as a sample from a multinomial distribution
-# # P(y | Theta)
-# mSim.medip.nuc = t(rmultinom(n = 1000, size = 1000, prob = ivProb.medip.nuc))
-# # convert to probability scale for plotting
-# mSim.medip.nuc = mSim.medip.nuc / rowSums(mSim.medip.nuc)
-# 
-# ## plot for BS-Seq
-# # calculate confidence intervals/errors by simulating the data
-# ivProb.bis.nuc = ivNucFreq.bis / sum(ivNucFreq.bis)
-# # simulate data as a sample from a multinomial distribution
-# # P(y | Theta)
-# mSim.bis.nuc = t(rmultinom(n = 1000, size = 1000, prob = ivProb.bis.nuc))
-# # convert to probability scale for plotting
-# mSim.bis.nuc = mSim.bis.nuc / rowSums(mSim.bis.nuc)
-# 
-# ### plot the 2 data together
-# c = rainbow(2)
-# mBar = rbind(ivProb.medip.nuc, ivProb.bis.nuc)
-# rownames(mBar) = c('MeDIP', 'BS-Seq')
-# l2 = barplot(mBar, beside=T, ylim=c(0, 0.5), col=c, main='Dinucleotide Frequencies: Only Group 10')
-# legend('topright', legend = rownames(mBar), fill = c)
-# l = l2[1,]
-# ## make error bars
-# m = apply(mSim.medip.nuc, 2, function(x) quantile(x, c(0.025, 0.975)))
-# segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
-# segments(l-0.1, y0 = m[1,], l+0.1, y1 = m[1,], lwd=2)
-# segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
-# 
-# l = l2[2,]
-# ## make error bars
-# m = apply(mSim.bis.nuc, 2, function(x) quantile(x, c(0.025, 0.975)))
-# segments(l, y0 = m[1,], l, y1 = m[2,], lwd=2)
-# segments(l-0.1, y0 = m[1,], l+0.1, y1 = m[1,], lwd=2)
-# segments(l-0.1, y0 = m[2,], l+0.1, y1 = m[2,], lwd=2)
-# 
-# 
-# ################################################################
-
-# 
-# 
-# ### load the gene casette
-# p = paste('Choose features casette created earlier with create_features_from_gff.R')
-# print(p)
-# lFeatures = f_LoadObject(file.choose())
-# 
-# ######################################################
-# ### Analysis
-# ### how many overlaps between bs-seq data and medip peaks in males
-# dfOverlaps = data.frame(table(overlapsAny(oGRpooled, oGR.bis)))
-# dfOverlaps.nostrand = data.frame(table(overlapsAny(oGRpooled, oGR.bis, ignore.strand=T)))
-# 
-# ### Gene Casette overlaps
-# ## count for medip data
-# # create a matrix to hold the matches
-# mFeatures = matrix(NA, nrow = length(lFeatures$fst.exon), ncol = 5)
-# colnames(mFeatures) = c('upstream', 'fst.exon', 'exons.others', 'introns', 'downstream')
-# rownames(mFeatures) = names(lFeatures$fst.exon)
-# cn = colnames(mFeatures)
-# rn = rownames(mFeatures)
-# # fill the data
-# for(i in 1:ncol(mFeatures)){
-#   # fill data one column at a time
-#   mFeatures[,i] = overlapsAny(lFeatures[[cn[i]]][rn], oGRpooled, ignore.strand=F)
-# }
-# f = rowSums(mFeatures)
-# # number of genes with a signal
-# table(f > 0)
-# mFeatures.medip = mFeatures
-# # summarize the data
-# mBar = colSums(mFeatures)
-# print(mBar)
-# mBar.medip = mBar
-# 
-# ## count for bs-seq data
-# mFeatures = matrix(NA, nrow = length(lFeatures$fst.exon), ncol = 5)
-# colnames(mFeatures) = c('upstream', 'fst.exon', 'exons.others', 'introns', 'downstream')
-# rownames(mFeatures) = names(lFeatures$fst.exon)
-# cn = colnames(mFeatures)
-# rn = rownames(mFeatures)
-# # fill the data
-# for(i in 1:ncol(mFeatures)){
-#   # fill data one column at a time
-#   mFeatures[,i] = overlapsAny(lFeatures[[cn[i]]][rn], unique(oGR.bis), ignore.strand=F)
-# }
-# f = rowSums(mFeatures)
-# # number of genes with a signal
-# table(f > 0)
-# mFeatures.bis = mFeatures
-# # summarize the data
-# mBar = colSums(mFeatures)
-# print(mBar)
-# mBar.bs = mBar
-# 
-# mBar = rbind(mBar.medip, mBar.bs)
-# mBar.p = mBar / rowSums(mBar)
-# c = rainbow(2)
-# bar = barplot(mBar.p, beside=T, col=c, main='Distribution over the Gene Casette for BS-Seq and MeDIP Data',
-#         ylim=c(0,0.8))
-# legend('topright', legend = c('MeDIP', 'BS-Seq'), fill=c)
-# 
-# ## perform proportion tests on the data by modelling the distribution as binomial 
-# ## where n = number of genes
-# ## for each feature e.g. upstream
-# ## success is number of TRUE and failures is FALSE
-# ## Compare the proprtions of successes in the 2 cases i.e. medip vs bs
-# p.val = rep(NA, length.out = ncol(mFeatures.bis))
-# names(p.val) = colnames(mFeatures.bis)
-# 
-# for (i in 1:length(p.val)){
-#   n = names(p.val)[i]
-#   # calculate success for med and bis
-#   trials = nrow(mFeatures.bis)
-#   success.med = sum(mFeatures.medip[,n])
-#   success.bis = sum(mFeatures.bis[,n])
-#   p.val[i] = prop.test(c(success.med, success.bis), n = c(trials,trials))$p.value
-# }
-# 
-# i = which(p.val < 0.01)
-# # draw stars on significant values
-# pos = colMeans(bar)[i]
-# points(pos, rep(0.72, times=length(pos)), pch='*', cex=2)
-# 
-# # 
-# # 
-# # 
-# # 
-# # 
-# # 
-# # 
-# # ## prop.test(c(170, 233), c(403,403))
-# # chisq.test(mBar[1,], p = mBar.p[2,], simulate.p.value = T)
 

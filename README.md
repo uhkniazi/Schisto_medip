@@ -162,4 +162,7 @@ a generic script, to create plots for genomic features (query) - created earlier
 ### date 23/08/2016
 Details of the analysis are described in the evernote document [here](https://www.evernote.com/shard/s288/nl/38698211/37a3b421-cd36-496a-af84-6ae5cd934b9c?title=Grunau's%20repeats%20and%20overlap%20of%20medip%20signal). The data files information is obtained from the MySQL database Projects.MetaFile where idData=3. The pooled peaks object and repeats object with categories for repeats are used for the analysis. Using the *get.pairwise.prob* function is used to calculate p-values for the simulated parameters. Categories with significant p-values are listed and plotted.  
 
+# 09_bis_seq_vs_medip.R  
+### date 12/09/2016  
+Details of the analysis are described in the evernote document [here](https://www.evernote.com/shard/s288/nl/38698211/686741e5-f8fa-494c-a83a-11d009812e10?title=Lyko%20vs%20Kathy%20(Round%201)). It compares the BS-Seq published data from the male with the MeDIP data and plots dinucleotide frequencies.  
 
